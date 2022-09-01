@@ -1,5 +1,5 @@
 # TranslatorBot
-A bot for translating Discord messages utilizing DeepL software.
+A bot for translating Discord messages utilizing DeepL software. Both slash commands and message commands are supported.
 
 Requirements:
 - Python 3.8+
