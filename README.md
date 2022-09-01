@@ -6,7 +6,7 @@ Requirements:
 - discord.py 2.0.1
 - aiohttp 3.8.1
 
-Credentials for the Discord bot and DeepL API must be in following format:
+Credentials file must exist in the project root directory. It must contain Discord API and DeepL API tokens in following format:
 
 ```json
 {
