@@ -40,7 +40,7 @@ class CommandPrefixParser:
 
 class TranslatorBot(commands.Bot):
 
-    def __init__(self, deepl_api_token: str, command_prefix: str = "!"):
+    def __init__(self, deepl_api_token: str, command_prefix: str = "?"):
         intents = discord.Intents.default()
         intents.message_content = True
         self.name = "TranslatorBot#3601"
