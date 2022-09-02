@@ -25,35 +25,99 @@ SOFTWARE.
 import json
 from discord.ext import commands
 from translator_bot import TranslatorBot
+from typing import List
 
 
 class TranslationCog(commands.Cog):
 
+    base_url = "https://api-free.deepl.com/v2"
+
     def __init__(self, bot: TranslatorBot):
         self.bot = bot
-        self.translation_url = "https://api-free.deepl.com/v2/translate"
+        self.supported_languages_abbr = self.read_language_abbreviations()
+
+    @classmethod
+    async def request_deepl_api(cls, bot: TranslatorBot, url: str, params: dict = None) -> str:
+        headers = dict()
+        headers["Authorization"] = f"DeepL-Auth-Key {bot.deepl_api_token}"
+        headers["User-Agent"] = bot.name
+
+        return await bot.fetch_url(url, headers=headers, params=params)
+
+    @staticmethod
+    def read_language_abbreviations() -> List[str]:
+        try:
+            with open("supported_languages.json", "r") as languages_file:
+                content = json.load(languages_file)
+                return [d["language"] for d in content]
+        except json.JSONDecodeError:
+            print("Supported languages file does not exist! Languages must be parsed manually.")
+            return []
+
+    def is_supported_language(self, abbreviation: str):
+        return abbreviation in self.supported_languages_abbr
+
+    async def __translate_text(self, text: str, source_language: str = None,
+                               target_language: str = "EN-US") -> List[str]:
+        params = dict()
+        params["text"] = text
+        params["target_lang"] = target_language.capitalize()
+        if source_language:
+            source_language = source_language.capitalize()
+            if not self.is_supported_language(source_language):
+                raise ValueError(f"Source language `{source_language}` is not supported.")
+            params["source_lang"] = source_language
+        if not self.is_supported_language(target_language):
+            raise ValueError(f"Target language `{target_language}` is not supported.")
+
+        response = await self.request_deepl_api(self.bot, self.base_url + "/translate", params=params)
+        print(response)
+        serialized_translations = json.loads(response)["translations"]
+        translations = []
+        for translation in serialized_translations:
+            source_language = translation["detected_source_language"]
+            translations.append(f"`{source_language} -> {target_language}`: {translation['text']}")
+
+        return translations
 
     @commands.guild_only()
-    @commands.hybrid_command(name="translate", description="Translate a message.")
+    @commands.hybrid_command(name="translate", description="Translate text to english.", aliases=["t"])
     async def translate(self, ctx: commands.Context, *, text: str) -> None:
-        target_language = "EN"
-        headers, params = dict(), dict()
-        headers["Authorization"] = f"DeepL-Auth-Key {self.bot.deepl_api_token}"
-        headers["User-Agent"] = self.bot.name
-        params["text"] = text
-        params["target_lang"] = target_language
+        """
+        Translate text to English.
 
-        response = await self.bot.fetch_url(self.translation_url, headers=headers, params=params)
-        print(response)
-        translations = json.loads(response)["translations"]
-        concatenated_translations = []
-        for translation in translations:
-            source_language = translation["detected_source_language"]
-            concatenated_translations.append(f"{source_language} -> {target_language}: {translation['text']}")
+        :param ctx:
+        :param text: Text to translate. Source language is detected automatically.
+        """
+        try:
+            translations = await self.__translate_text(text)
+            await ctx.send("\n".join(translations))
+        except ValueError as e:
+            await ctx.send(str(e))
 
-        await ctx.send("\n".join(concatenated_translations))
+    @commands.guild_only()
+    @commands.hybrid_command(name="ttranslate", description="Translate text to a target language.",
+                             aliases=["target_translate", "tt"])
+    async def target_translate(self, ctx: commands.Context, target_language: str, *, text: str) -> None:
+        """
+        Translate text to a target language.
+
+        :param ctx:
+        :param target_language: Target language for the translation. Must be and abbreviation. Case-insensitive.
+        :param text: Text to translate. Source language is detected automatically.
+        """
+        try:
+            translations = await self.__translate_text(text, target_language=target_language)
+            await ctx.send("\n".join(translations))
+        except ValueError as e:
+            await ctx.send(str(e))
+
+    @commands.command(name="languages", description="Get list of all supported language abbreviations.")
+    async def get_supported_languages(self, ctx: commands.Context):
+        formatted = [f"`{abbr}`" for abbr in self.supported_languages_abbr]
+        await ctx.send(", ".join(formatted))
 
 
 # noinspection PyTypeChecker
-async def setup(bot: commands.Bot):
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(TranslationCog(bot))
