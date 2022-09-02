@@ -112,6 +112,11 @@ class TranslationCog(commands.Cog):
         except ValueError as e:
             await ctx.send(str(e))
 
+    @commands.command(name="languages", description="Get list of all supported language abbreviations.")
+    async def get_supported_languages(self, ctx: commands.Context):
+        formatted = [f"`{abbr}`" for abbr in self.supported_languages_abbr]
+        await ctx.send(", ".join(formatted))
+
 
 # noinspection PyTypeChecker
 async def setup(bot: commands.Bot) -> None:

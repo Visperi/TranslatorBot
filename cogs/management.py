@@ -93,7 +93,7 @@ class ManagementCog(commands.Cog):
         await self.bot.tree.sync(guild=guild_id)
         await ctx.send("Commands synced!")
 
-    @commands.command("languages")
+    @commands.command("getlangs")
     async def fetch_supported_languages(self, ctx: commands.Context):
         resp = await TranslationCog.request_deepl_api(self.bot, TranslationCog.base_url + "/languages?type=target")
         langs = json.loads(resp)
