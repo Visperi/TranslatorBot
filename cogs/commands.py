@@ -59,11 +59,14 @@ class TranslationCog(commands.Cog):
 
     async def __translate_text(self, text: str, source_language: str = None,
                                target_language: str = "EN-US") -> List[str]:
+        if not target_language:
+            raise ValueError("Target language must be given.")
+        target_language = target_language.upper()
         params = dict()
         params["text"] = text
-        params["target_lang"] = target_language.capitalize()
+        params["target_lang"] = target_language
         if source_language:
-            source_language = source_language.capitalize()
+            source_language = source_language.upper()
             if not self.is_supported_language(source_language):
                 raise ValueError(f"Source language `{source_language}` is not supported.")
             params["source_lang"] = source_language
