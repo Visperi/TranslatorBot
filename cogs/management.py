@@ -36,7 +36,7 @@ class ManagementCog(commands.Cog):
     async def cog_check(self, ctx: commands.Context) -> bool:
         return await self.bot.is_owner(ctx.author)
 
-    @commands.hybrid_group(name="extension")
+    @commands.group(name="extension")
     async def manage_extensions(self, ctx: commands.Context):
         if ctx.invoked_subcommand is None:
             await ctx.send(f"Invalid extension management command: `{ctx.message.content.split()[1]}`")
@@ -77,7 +77,7 @@ class ManagementCog(commands.Cog):
             await ctx.send(f"Extension `{extension_name}` is not loaded. Please ensure the full "
                            f"extension name was given.")
 
-    @commands.hybrid_command(name="usage")
+    @commands.command(name="usage")
     async def get_deepl_translation_limits(self, ctx: commands.Context) -> None:
         response = await TranslationCog.request_deepl_api(self.bot, TranslationCog.base_url + "/usage")
         d = json.loads(response)
@@ -88,12 +88,12 @@ class ManagementCog(commands.Cog):
                        f"Character limit: {character_limit}\n\n"
                        f"Usage: {round(character_count / character_limit, 3)}%")
 
-    @commands.hybrid_command(name="sync")
+    @commands.command(name="sync")
     async def sync_commands(self, ctx: commands.Context, guild_id: int = None) -> None:
         await self.bot.tree.sync(guild=guild_id)
         await ctx.send("Commands synced!")
 
-    @commands.hybrid_command("getlangs")
+    @commands.command("getlangs")
     async def fetch_supported_languages(self, ctx: commands.Context):
         resp = await TranslationCog.request_deepl_api(self.bot, TranslationCog.base_url + "/languages?type=target")
         langs = json.loads(resp)
