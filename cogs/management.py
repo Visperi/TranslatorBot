@@ -92,12 +92,12 @@ class ManagementCog(commands.Cog):
         await ctx.send("Commands synced!")
 
     @commands.command("getlangs")
-    async def fetch_supported_languages(self, ctx: commands.Context):
-        langs = await self.bot.deepl.get_supported_languages()
-        print(langs)
+    async def update_supported_languages(self, ctx: commands.Context):
+        langs = await self.bot.deepl.fetch_supported_languages()
+        jsonified = [language.as_dict() for language in langs]
 
         with open("supported_languages.json", "w") as languages_file:
-            json.dump(langs, languages_file, indent=4, ensure_ascii=False)
+            json.dump(jsonified, languages_file, indent=4, ensure_ascii=False)
 
         await ctx.send("Supported languages updated. Commands cog must be reloaded after this operation.")
 
