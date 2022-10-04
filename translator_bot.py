@@ -27,6 +27,7 @@ import aiohttp
 import traceback
 import os
 import re
+from deepl_wrapper import DeepL
 from discord.ext import commands
 
 
@@ -44,9 +45,9 @@ class TranslatorBot(commands.Bot):
     def __init__(self, deepl_api_token: str, command_prefix: str = "?"):
         intents = discord.Intents.default()
         intents.message_content = True
-        self.name = "TranslatorBot#3601"
-        self.deepl_api_token = deepl_api_token
         self.aiohttp_session = None
+        self.deepl = None
+        self._deepl_api_token = deepl_api_token
         self.cogs_path = f"{os.path.dirname(__file__)}/cogs"
         prefix_parser = CommandPrefixParser(command_prefix)
         super().__init__(command_prefix=prefix_parser, intents=intents, case_insensitive=True)
@@ -65,6 +66,7 @@ class TranslatorBot(commands.Bot):
     async def setup_hook(self):
         await self.__load_cogs()
         self.aiohttp_session = aiohttp.ClientSession(loop=self.loop, raise_for_status=True)
+        self.deepl = DeepL(self._deepl_api_token, str(self.user), self.aiohttp_session)
 
     async def fetch_url(self, url: str, timeout: int = 10, **kwargs) -> str:
         if not url:
@@ -73,8 +75,10 @@ class TranslatorBot(commands.Bot):
             return await response.text()
 
     async def on_message(self, message: discord.Message, /) -> None:
+        # Check if message contains only mention of this bot and contains a replied message reference
         if re.fullmatch(rf"<@!?{self.user.id}>", message.content) and message.reference:
-            original_text = message.reference.resolved
-            translated = None
-            return
-        await self.process_commands(message)
+            untranslated_text = message.reference.resolved.content
+            translated = await self.deepl.translate_text(untranslated_text, "EN-US")
+            await message.channel.send("\n".join(translated))
+        else:
+            await self.process_commands(message)

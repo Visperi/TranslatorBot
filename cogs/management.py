@@ -24,7 +24,6 @@ SOFTWARE.
 
 import json
 from discord.ext import commands
-from cogs.commands import TranslationCog
 from translator_bot import TranslatorBot
 
 
@@ -79,10 +78,9 @@ class ManagementCog(commands.Cog):
 
     @commands.command(name="usage")
     async def get_deepl_translation_limits(self, ctx: commands.Context) -> None:
-        response = await TranslationCog.request_deepl_api(self.bot, TranslationCog.base_url + "/usage")
-        d = json.loads(response)
-        character_count = d["character_count"]
-        character_limit = d["character_limit"]
+        response = await self.bot.deepl.get_usage()
+        character_count = response["character_count"]
+        character_limit = response["character_limit"]
 
         await ctx.send(f"Character count: {character_count}\n"
                        f"Character limit: {character_limit}\n\n"
@@ -95,8 +93,7 @@ class ManagementCog(commands.Cog):
 
     @commands.command("getlangs")
     async def fetch_supported_languages(self, ctx: commands.Context):
-        resp = await TranslationCog.request_deepl_api(self.bot, TranslationCog.base_url + "/languages?type=target")
-        langs = json.loads(resp)
+        langs = await self.bot.deepl.get_supported_languages()
         print(langs)
 
         with open("supported_languages.json", "w") as languages_file:
