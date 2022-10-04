@@ -22,66 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import json
 from discord.ext import commands
 from translator_bot import TranslatorBot
-from typing import List
 
 
 class TranslationCog(commands.Cog):
 
-    base_url = "https://api-free.deepl.com/v2"
-
     def __init__(self, bot: TranslatorBot):
         self.bot = bot
-        self.supported_languages_abbr = self.read_language_abbreviations()
-
-    @classmethod
-    async def request_deepl_api(cls, bot: TranslatorBot, url: str, params: dict = None) -> str:
-        headers = dict()
-        headers["Authorization"] = f"DeepL-Auth-Key {bot.deepl_api_token}"
-        headers["User-Agent"] = bot.name
-
-        return await bot.fetch_url(url, headers=headers, params=params)
-
-    @staticmethod
-    def read_language_abbreviations() -> List[str]:
-        try:
-            with open("supported_languages.json", "r") as languages_file:
-                content = json.load(languages_file)
-                return [d["language"] for d in content]
-        except json.JSONDecodeError:
-            print("Supported languages file does not exist! Languages must be parsed manually.")
-            return []
-
-    def is_supported_language(self, abbreviation: str):
-        return abbreviation in self.supported_languages_abbr
-
-    async def __translate_text(self, text: str, source_language: str = None,
-                               target_language: str = "EN-US") -> List[str]:
-        if not target_language:
-            raise ValueError("Target language must be given.")
-        target_language = target_language.upper()
-        params = dict()
-        params["text"] = text
-        params["target_lang"] = target_language
-        if source_language:
-            source_language = source_language.upper()
-            if not self.is_supported_language(source_language):
-                raise ValueError(f"Source language `{source_language}` is not supported.")
-            params["source_lang"] = source_language
-        if not self.is_supported_language(target_language):
-            raise ValueError(f"Target language `{target_language}` is not supported.")
-
-        response = await self.request_deepl_api(self.bot, self.base_url + "/translate", params=params)
-        print(response)
-        serialized_translations = json.loads(response)["translations"]
-        translations = []
-        for translation in serialized_translations:
-            source_language = translation["detected_source_language"]
-            translations.append(f"`{source_language} -> {target_language}`: {translation['text']}")
-
-        return translations
 
     @commands.guild_only()
     @commands.hybrid_command(name="translate", description="Translate text to english.", aliases=["t"])
@@ -93,7 +41,7 @@ class TranslationCog(commands.Cog):
         :param text: Text to translate. Source language is detected automatically.
         """
         try:
-            translations = await self.__translate_text(text)
+            translations = await self.bot.deepl.translate_text(text, "EN-US")
             await ctx.send("\n".join(translations))
         except ValueError as e:
             await ctx.send(str(e))
@@ -110,7 +58,7 @@ class TranslationCog(commands.Cog):
         :param text: Text to translate. Source language is detected automatically.
         """
         try:
-            translations = await self.__translate_text(text, target_language=target_language)
+            translations = await self.bot.deepl.translate_text(text, target_language=target_language.upper())
             await ctx.send("\n".join(translations))
         except ValueError as e:
             await ctx.send(str(e))
@@ -118,7 +66,7 @@ class TranslationCog(commands.Cog):
     @commands.guild_only()
     @commands.hybrid_command(name="languages", description="Get list of all supported language abbreviations.")
     async def get_supported_languages(self, ctx: commands.Context):
-        formatted = [f"`{abbr}`" for abbr in self.supported_languages_abbr]
+        formatted = [f"`{abbr}`" for abbr in self.bot.deepl.supported_languages_abbr]
         await ctx.send(", ".join(formatted))
 
 
