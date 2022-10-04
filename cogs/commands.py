@@ -43,7 +43,7 @@ class TranslationCog(commands.Cog):
         try:
             translations = await self.bot.deepl.translate_text(text, "EN-US")
             await ctx.send("\n".join(translations))
-        except ValueError as e:
+        except Exception as e:
             await ctx.send(str(e))
 
     @commands.guild_only()
@@ -58,9 +58,20 @@ class TranslationCog(commands.Cog):
         :param text: Text to translate. Source language is detected automatically.
         """
         try:
-            translations = await self.bot.deepl.translate_text(text, target_language=target_language.upper())
+            translations = await self.bot.deepl.translate_text(text, target_language=target_language)
             await ctx.send("\n".join(translations))
-        except ValueError as e:
+        except Exception as e:
+            await ctx.send(str(e))
+
+    @commands.guild_only()
+    @commands.hybrid_command(name="stranslate", aliases=["source_translate", "st"],
+                             description="Translate text from source language to target language. "
+                                         "Both source and target language are needed.")
+    async def source_translate(self, ctx: commands.Context, source_language: str, target_language: str, *, text: str) -> None:
+        try:
+            translations = await self.bot.deepl.translate_text(text, target_language, source_language=source_language)
+            await ctx.send("\n".join(translations))
+        except Exception as e:
             await ctx.send(str(e))
 
     @commands.guild_only()
