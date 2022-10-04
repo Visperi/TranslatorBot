@@ -97,8 +97,15 @@ class TranslatorBot(commands.Bot):
             await message.channel.send(str(e))
 
     async def on_message(self, message: discord.Message, /) -> None:
+        if message.author == self.user:
+            return
+        
+        startswith_mention = re.fullmatch(rf"<@!?{self.user.id}>", message.content.split()[0])
         # Check if message contains only mention of this bot and contains a replied message reference
-        if re.fullmatch(rf"<@!?{self.user.id}>", message.content.split()[0]) and message.reference:
+        if startswith_mention and message.reference:
             await self.__translate_from_reply(message)
+        elif startswith_mention:
+            await message.channel.send("Translate a message with a mention by also replying to "
+                                       "the translated message.")
         else:
             await self.process_commands(message)
