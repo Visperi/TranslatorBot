@@ -36,12 +36,21 @@ class ManagementCog(commands.Cog):
         return await self.bot.is_owner(ctx.author)
 
     @commands.group(name="extension")
-    async def manage_extensions(self, ctx: commands.Context):
+    async def manage_extensions(self, ctx: commands.Context) -> None:
+        """
+        Load, reload or unload an extension. Bot owner only command.
+        :param ctx:
+        """
         if ctx.invoked_subcommand is None:
             await ctx.send(f"Invalid extension management command: `{ctx.message.content.split()[1]}`")
 
     @manage_extensions.command(name="load")
-    async def load_cog(self, ctx: commands.Context, extension_name: str):
+    async def load_cog(self, ctx: commands.Context, extension_name: str) -> None:
+        """
+        Load an extension atomically. Bot owner command.
+        :param ctx:
+        :param extension_name: Extension name to load.
+        """
         try:
             await self.bot.load_extension(extension_name)
             await ctx.send(f"Successfully loaded extension `{extension_name}`.")
@@ -53,7 +62,12 @@ class ManagementCog(commands.Cog):
                            f"extension name was given.")
 
     @manage_extensions.command(name="unload")
-    async def unload_cog(self, ctx: commands.Context, extension_name: str):
+    async def unload_cog(self, ctx: commands.Context, extension_name: str) -> None:
+        """
+        Unload an extension atomically. Bot owner command.
+        :param ctx:
+        :param extension_name: Extension name to unload.
+        """
         try:
             await self.bot.unload_extension(extension_name)
             await ctx.send(f"Successfully unloaded extension `{extension_name}`.")
@@ -65,7 +79,12 @@ class ManagementCog(commands.Cog):
                            f"extension name was given.")
 
     @manage_extensions.command(name="reload")
-    async def reload_cog(self, ctx: commands.Context, extension_name: str):
+    async def reload_cog(self, ctx: commands.Context, extension_name: str) -> None:
+        """
+        Reload an extension atomically. Bot owner command.
+        :param ctx:
+        :param extension_name: Extension name to reload.
+        """
         try:
             await self.bot.reload_extension(extension_name)
             await ctx.send(f"Successfully reloaded extension `{extension_name}`")
@@ -78,6 +97,10 @@ class ManagementCog(commands.Cog):
 
     @commands.command(name="usage")
     async def get_deepl_translation_limits(self, ctx: commands.Context) -> None:
+        """
+        Get DeepL API usage status for the bot. Bot owner command.
+        :param ctx:
+        """
         response = await self.bot.deepl.get_usage()
         character_count = response["character_count"]
         character_limit = response["character_limit"]
@@ -88,11 +111,20 @@ class ManagementCog(commands.Cog):
 
     @commands.command(name="sync")
     async def sync_commands(self, ctx: commands.Context, guild_id: int = None) -> None:
+        """
+        Synchronize slash commands to Discord API for the bot. Bot owner command.
+        :param ctx:
+        :param guild_id: Guild ID to sync the commands for. If not provided, sync for all guilds.
+        """
         await self.bot.tree.sync(guild=guild_id)
         await ctx.send("Commands synced!")
 
     @commands.command("getlangs")
-    async def update_supported_languages(self, ctx: commands.Context):
+    async def update_supported_languages(self, ctx: commands.Context) -> None:
+        """
+        Upoate supported languages in the supported_languages.json file. Bot owner command.
+        :param ctx:
+        """
         langs = await self.bot.deepl.fetch_supported_languages()
         jsonified = [language.as_dict() for language in langs]
 
