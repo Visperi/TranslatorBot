@@ -47,7 +47,7 @@ class ManagementCog(commands.Cog):
     @manage_extensions.command(name="load")
     async def load_cog(self, ctx: commands.Context, extension_name: str) -> None:
         """
-        Load an extension atomically. Bot owner command.
+        Load an extension atomically.
         :param ctx:
         :param extension_name: Extension name to load.
         """
@@ -64,7 +64,7 @@ class ManagementCog(commands.Cog):
     @manage_extensions.command(name="unload")
     async def unload_cog(self, ctx: commands.Context, extension_name: str) -> None:
         """
-        Unload an extension atomically. Bot owner command.
+        Unload an extension atomically.
         :param ctx:
         :param extension_name: Extension name to unload.
         """
@@ -81,7 +81,7 @@ class ManagementCog(commands.Cog):
     @manage_extensions.command(name="reload")
     async def reload_cog(self, ctx: commands.Context, extension_name: str) -> None:
         """
-        Reload an extension atomically. Bot owner command.
+        Reload an extension atomically.
         :param ctx:
         :param extension_name: Extension name to reload.
         """
