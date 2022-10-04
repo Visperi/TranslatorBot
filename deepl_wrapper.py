@@ -23,8 +23,8 @@ SOFTWARE.
 """
 
 import aiohttp
-import json
-from typing import List
+import asyncio
+from typing import List, Optional
 
 
 class DeepL:
@@ -35,24 +35,55 @@ class DeepL:
         usage = f"{base_url}/usage"
         languages = f"{base_url}/languages?type=target"
 
+    class Language:
+        def __init__(self, raw: dict):
+            self.abbreviation: str = raw["language"]
+            self.name: str = raw["name"]
+            self.supports_formality: bool = raw["supports_formality"]
+
+        def as_dict(self) -> dict:
+            return dict(language=self.abbreviation, name=self.name, supports_formality=self.supports_formality)
+
     def __init__(self, api_token: str, user_agent: str, aiohttp_session: aiohttp.ClientSession):
         self._api_token = api_token
         self._user_agent = user_agent
         self._session = aiohttp_session
-        self.supported_languages_abbr = self.read_language_abbreviations()
+        self.supported_languages: List['DeepL.Language'] = []
+        asyncio.create_task(self.__get_supported_languages())
 
-    @staticmethod
-    def read_language_abbreviations() -> List[str]:
-        try:
-            with open("supported_languages.json", "r") as languages_file:
-                content = json.load(languages_file)
-                return [d["language"] for d in content]
-        except json.JSONDecodeError:
-            print("Supported languages file does not exist! Languages must be parsed manually.")
-            return []
+    async def __get_supported_languages(self):
+        asd = await asyncio.gather(self.fetch_supported_languages())
+        self.supported_languages = asd[0]
 
-    def is_supported_language(self, abbreviation: str):
-        return abbreviation in self.supported_languages_abbr
+    def get_language(self, search: str, ignore_case: bool = False) -> Optional[Language]:
+        if not search:
+            raise ValueError("Target language must be provided.")
+
+        if ignore_case:
+            search = search.casefold()
+        for language in self.supported_languages:
+            lang_name = language.name
+            lang_abbr = language.abbreviation
+            if ignore_case:
+                lang_name = lang_name.casefold()
+                lang_abbr = lang_abbr.casefold()
+            if search == lang_name or search == lang_abbr:
+                return language
+
+        return None
+
+    def is_supported_language(self, search: str, ignore_case: bool = False) -> bool:
+        if not search:
+            return False
+
+        return self.get_language(search, ignore_case=ignore_case) is not None
+
+    async def fetch_supported_languages(self) -> List[Language]:
+        languages = []
+        for raw in await self._request_deepl_api(self.ApiUrls.languages):
+            languages.append(self.Language(raw))
+
+        return languages
 
     async def _request_deepl_api(self, url, params: dict = None, **kwargs) -> dict:
         headers = {"Authorization": f"DeepL-Auth-Key {self._api_token}", "User-Agent": self._user_agent}
@@ -60,29 +91,26 @@ class DeepL:
         async with self._session.get(url, headers=headers, params=params, **kwargs) as response:
             return await response.json(encoding="utf-8")
 
-    async def get_supported_languages(self) -> dict:
-        return await self._request_deepl_api(self.ApiUrls.languages)
-
     async def get_usage(self) -> dict:
         return await self._request_deepl_api(self.ApiUrls.usage)
 
-    async def translate_text(self, text: str, target_language: str, source_language: str = None) -> List[str]:
+    async def translate_text(self, text: str, target_language: str, source_language: Optional[str] = None) -> List[str]:
+        target_language = self.get_language(target_language, ignore_case=True)
         if not target_language:
-            raise ValueError("Target language must be provided.")
-        if not self.is_supported_language(target_language):
             raise ValueError(f"Target language {target_language} is not supported.")
-        if source_language and not self.is_supported_language(source_language):
-            raise ValueError(f"Source language {source_language} is not supported.")
+        if source_language and not self.get_language(source_language, ignore_case=True):
+            raise ValueError(f"Target source language {source_language} is not supported.")
 
-        params = dict(text=text, target_lang=target_language)
+        params = dict(text=text, target_lang=target_language.abbreviation)
         if source_language:
-            params["source_lang"] = source_language
+            params["source_lang"] = self.get_language(source_language, ignore_case=True).abbreviation
         response = await self._request_deepl_api(self.ApiUrls.translate, params=params, timeout=5)
         print(response)
         serialized_translations = response["translations"]
         translations = []
         for translation in serialized_translations:
-            source_language = translation["detected_source_language"]
-            translations.append(f"`{source_language} -> {target_language}`: {translation['text']}")
+            detected_source_lang = self.get_language(translation["detected_source_language"])
+            translations.append(f"`{detected_source_lang.abbreviation} -> {target_language.abbreviation}`: "
+                                f"{translation['text']}")
 
         return translations
