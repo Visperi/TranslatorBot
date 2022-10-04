@@ -75,9 +75,13 @@ class TranslatorBot(commands.Bot):
             return await response.text()
 
     async def __translate_from_reply(self, message: discord.Message) -> None:
+        """
+        Translate a message from a replied message. Is triggered only when the bot is mentioned.
+        :param message: Message which triggered this event.
+        """
         split = message.content.split()
         if len(split) > 2:
-            await message.channel.send("I don't quote understand. "
+            await message.channel.send("I don't quite understand. "
                                        "Please send only the possible target language after mentioning me.")
             return
         try:
