@@ -27,6 +27,7 @@ import aiohttp
 import traceback
 import os
 import re
+from typing import Optional
 from deepl_wrapper import DeepL
 from discord.ext import commands
 
@@ -74,11 +75,27 @@ class TranslatorBot(commands.Bot):
         async with self.aiohttp_session.get(url, timeout=timeout, **kwargs) as response:
             return await response.text()
 
+    async def __translate_from_reply(self, message: discord.Message) -> None:
+        split = message.content.split()
+        if len(split) > 2:
+            await message.channel.send("I don't quote understand. "
+                                       "Please send only the possible target language after mentioning me.")
+            return
+        try:
+            target_language = split[1]
+        except IndexError:
+            target_language = "EN-US"
+
+        untranslated_text = message.reference.resolved.content
+        try:
+            translated = await self.deepl.translate_text(untranslated_text, target_language)
+            await message.channel.send("\n".join(translated))
+        except ValueError as e:
+            await message.channel.send(str(e))
+
     async def on_message(self, message: discord.Message, /) -> None:
         # Check if message contains only mention of this bot and contains a replied message reference
-        if re.fullmatch(rf"<@!?{self.user.id}>", message.content) and message.reference:
-            untranslated_text = message.reference.resolved.content
-            translated = await self.deepl.translate_text(untranslated_text, "EN-US")
-            await message.channel.send("\n".join(translated))
+        if re.fullmatch(rf"<@!?{self.user.id}>", message.content.split()[0]) and message.reference:
+            await self.__translate_from_reply(message)
         else:
             await self.process_commands(message)
