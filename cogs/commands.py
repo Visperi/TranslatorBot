@@ -67,7 +67,8 @@ class TranslationCog(commands.Cog):
     @commands.hybrid_command(name="stranslate", aliases=["source_translate", "st"],
                              description="Translate text from source language to target language. "
                                          "Both source and target language are needed.")
-    async def source_translate(self, ctx: commands.Context, source_language: str, target_language: str, *, text: str) -> None:
+    async def source_translate(self, ctx: commands.Context, source_language: str, target_language: str, *, text: str) \
+            -> None:
         try:
             translations = await self.bot.deepl.translate_text(text, target_language, source_language=source_language)
             await ctx.send("\n".join(translations))
