@@ -69,6 +69,14 @@ class TranslationCog(commands.Cog):
                                          "Both source and target language are needed.")
     async def source_translate(self, ctx: commands.Context, source_language: str, target_language: str, *, text: str) \
             -> None:
+        """
+        Translate text from selected source language to the selected target language. Both source and target languages
+        are required.
+        :param ctx:
+        :param source_language: Source language for the original text.
+        :param target_language: Target language for the translated text.
+        :param text: Text to translate.
+        """
         try:
             translations = await self.bot.deepl.translate_text(text, target_language, source_language=source_language)
             await ctx.send("\n".join(translations))
@@ -78,6 +86,10 @@ class TranslationCog(commands.Cog):
     @commands.guild_only()
     @commands.hybrid_command(name="languages", description="Get list of all supported language abbreviations.")
     async def get_supported_languages(self, ctx: commands.Context):
+        """
+        Get list of supported languages and their abbreviations. Both abbreviation and full langauge names can be used
+        for translation commands.
+        """
         supported_languages = []
         for language in self.bot.deepl.supported_languages:
             supported_languages.append(f"`{language.abbreviation}`: {language.name}")
