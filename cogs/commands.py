@@ -66,8 +66,10 @@ class TranslationCog(commands.Cog):
     @commands.guild_only()
     @commands.hybrid_command(name="languages", description="Get list of all supported language abbreviations.")
     async def get_supported_languages(self, ctx: commands.Context):
-        formatted = [f"`{abbr}`" for abbr in self.bot.deepl.supported_languages_abbr]
-        await ctx.send(", ".join(formatted))
+        supported_languages = []
+        for language in self.bot.deepl.supported_languages:
+            supported_languages.append(f"`{language.abbreviation}`: {language.name}")
+        await ctx.send("\n".join(supported_languages))
 
 
 # noinspection PyTypeChecker
