@@ -27,6 +27,10 @@ import asyncio
 from typing import List, Optional
 
 
+class DeepLApiError(Exception):
+    pass
+
+
 class DeepL:
 
     class ApiUrls:
@@ -55,9 +59,22 @@ class DeepL:
         asd = await asyncio.gather(self.fetch_supported_languages())
         self.supported_languages = asd[0]
 
+    @staticmethod
+    def replace_aliases(search: str, ignore_case: bool = False) -> str:
+        if ignore_case:
+            if search.casefold() == "en" or search.casefold() == "english":
+                return "EN-US"
+        else:
+            if search == "EN" or search == "English":
+                return "EN-US"
+
+        return search
+
     def get_language(self, search: str, ignore_case: bool = False) -> Optional[Language]:
         if not search:
             raise ValueError("Target language must be provided.")
+
+        search = self.replace_aliases(search, ignore_case=ignore_case)
 
         if ignore_case:
             search = search.casefold()
@@ -85,32 +102,38 @@ class DeepL:
 
         return languages
 
-    async def _request_deepl_api(self, url, params: dict = None, **kwargs) -> dict:
+    async def _request_deepl_api(self, url, params: dict = None, timeout: int = 5, **kwargs) -> dict:
         headers = {"Authorization": f"DeepL-Auth-Key {self._api_token}", "User-Agent": self._user_agent}
 
-        async with self._session.get(url, headers=headers, params=params, **kwargs) as response:
+        async with self._session.get(url, headers=headers, params=params, timeout=timeout, **kwargs) as response:
+            if response.status == 429:
+                raise DeepLApiError("Too many DeepL API requests. Consider adding some delay between frequent "
+                                    "requests.")
+            elif response.status == 456:
+                raise DeepLApiError("DeepL API quota exceeded. This can be resolved by upgrading DeepL subscription.")
             return await response.json(encoding="utf-8")
 
     async def get_usage(self) -> dict:
         return await self._request_deepl_api(self.ApiUrls.usage)
 
     async def translate_text(self, text: str, target_language: str, source_language: Optional[str] = None) -> List[str]:
-        target_language = self.get_language(target_language, ignore_case=True)
-        if not target_language:
+        target_lang = self.get_language(target_language, ignore_case=True)
+        if not target_lang:
             raise ValueError(f"Target language {target_language} is not supported.")
         if source_language and not self.get_language(source_language, ignore_case=True):
             raise ValueError(f"Target source language {source_language} is not supported.")
 
-        params = dict(text=text, target_lang=target_language.abbreviation)
+        params = dict(text=text, target_lang=target_lang.abbreviation)
         if source_language:
-            params["source_lang"] = self.get_language(source_language, ignore_case=True).abbreviation
-        response = await self._request_deepl_api(self.ApiUrls.translate, params=params, timeout=5)
+            # Get language, then split possible EN-US, EN-GB languages to only EN (only this is supported as source)
+            params["source_lang"] = self.get_language(source_language, ignore_case=True).abbreviation.split("-")[0]
+        response = await self._request_deepl_api(self.ApiUrls.translate, params=params)
         print(response)
         serialized_translations = response["translations"]
         translations = []
         for translation in serialized_translations:
-            detected_source_lang = self.get_language(translation["detected_source_language"])
-            translations.append(f"`{detected_source_lang.abbreviation} -> {target_language.abbreviation}`: "
+            detected_source_language = self.get_language(translation["detected_source_language"])
+            translations.append(f"`{detected_source_language.abbreviation} -> {target_lang.abbreviation}`: "
                                 f"{translation['text']}")
 
         return translations

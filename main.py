@@ -25,7 +25,7 @@ SOFTWARE.
 import json
 from translator_bot import TranslatorBot
 
-BOT_VERSION = "0.2"
+BOT_VERSION = "0.5"
 
 
 def start():
