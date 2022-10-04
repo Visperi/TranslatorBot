@@ -27,7 +27,6 @@ import aiohttp
 import traceback
 import os
 import re
-from typing import Optional
 from deepl_wrapper import DeepL
 from discord.ext import commands
 
