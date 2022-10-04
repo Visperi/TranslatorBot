@@ -26,6 +26,7 @@ import discord
 import aiohttp
 import traceback
 import os
+import re
 from discord.ext import commands
 
 
@@ -70,3 +71,10 @@ class TranslatorBot(commands.Bot):
             raise ValueError("Url must be provided.")
         async with self.aiohttp_session.get(url, timeout=timeout, **kwargs) as response:
             return await response.text()
+
+    async def on_message(self, message: discord.Message, /) -> None:
+        if re.fullmatch(rf"<@!?{self.user.id}>", message.content) and message.reference:
+            original_text = message.reference.resolved
+            translated = None
+            return
+        await self.process_commands(message)
