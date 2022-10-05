@@ -26,7 +26,11 @@ from discord.ext import commands
 from translator_bot import TranslatorBot
 
 
-class TranslationCog(commands.Cog):
+class TranslationCog(commands.Cog, name="Translations",
+                     description="Commands for doing translations in Discord chat."):
+    """
+    A cog encapsulating various translation commands and commands for 
+    """
 
     def __init__(self, bot: TranslatorBot):
         self.bot = bot
