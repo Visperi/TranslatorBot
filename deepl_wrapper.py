@@ -55,15 +55,19 @@ class DeepL:
         self._api_token = api_token
         self._user_agent = user_agent
         self._session = aiohttp_session
-        self.supported_languages: List['DeepL.Language'] = []
+        self._supported_languages: List['DeepL.Language'] = []
         asyncio.create_task(self.__set_supported_languages())
+
+    @property
+    def supported_languages(self) -> List['DeepL.Language']:
+        return self._supported_languages
 
     async def __set_supported_languages(self) -> None:
         """
-        Set supported languages.
+        Fetch and set supported languages.
         """
         tmp = await asyncio.gather(self.fetch_supported_languages())
-        self.supported_languages = tmp[0]
+        self._supported_languages = tmp[0]
 
     @staticmethod
     def replace_aliases(representation: str, ignore_case: bool = False) -> str:
