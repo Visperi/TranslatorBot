@@ -27,7 +27,11 @@ from discord.ext import commands
 from translator_bot import TranslatorBot
 
 
-class ManagementCog(commands.Cog):
+class ManagementCog(commands.Cog, name="Management",
+                    description="Various bot owner only commands for managing the bot through Discord chat."):
+    """
+    A cog encapsulating various commands for managing the bot and DeepL data.
+    """
 
     def __init__(self, bot: TranslatorBot):
         self.bot = bot
@@ -38,7 +42,7 @@ class ManagementCog(commands.Cog):
     @commands.group(name="extension")
     async def manage_extensions(self, ctx: commands.Context) -> None:
         """
-        Load, reload or unload an extension. Bot owner only command.
+        Load, reload or unload an extension.
         :param ctx:
         """
         if ctx.invoked_subcommand is None:
@@ -98,7 +102,7 @@ class ManagementCog(commands.Cog):
     @commands.command(name="usage")
     async def get_deepl_translation_limits(self, ctx: commands.Context) -> None:
         """
-        Get DeepL API usage status for the bot. Bot owner command.
+        Get DeepL API usage status for the bot.
         :param ctx:
         """
         response = await self.bot.deepl.get_usage()
@@ -122,7 +126,7 @@ class ManagementCog(commands.Cog):
     @commands.command("getlangs")
     async def update_supported_languages(self, ctx: commands.Context) -> None:
         """
-        Upoate supported languages in the supported_languages.json file. Bot owner command.
+        Update supported languages in the supported_languages.json file.
         :param ctx:
         """
         langs = await self.bot.deepl.fetch_supported_languages()

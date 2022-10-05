@@ -45,12 +45,32 @@ class TranslatorBot(commands.Bot):
     def __init__(self, deepl_api_token: str, command_prefix: str = "?"):
         intents = discord.Intents.default()
         intents.message_content = True
-        self.aiohttp_session = None
-        self.deepl = None
+        self._aiohttp_session = None
+        self._deepl = None
         self._deepl_api_token = deepl_api_token
         self.cogs_path = f"{os.path.dirname(__file__)}/cogs"
         prefix_parser = CommandPrefixParser(command_prefix)
         super().__init__(command_prefix=prefix_parser, intents=intents, case_insensitive=True)
+
+    @property
+    def aiohttp_session(self):
+        return self._aiohttp_session
+
+    @aiohttp_session.setter
+    def aiohttp_session(self, value: aiohttp.ClientSession):
+        if not value:
+            raise ValueError("aiohttp.ClientSession must be rovided.")
+        self._aiohttp_session = value
+
+    @property
+    def deepl(self):
+        return self._deepl
+
+    @deepl.setter
+    def deepl(self, value: DeepL):
+        if not value:
+            raise ValueError("DeepL object must be provided.")
+        self._deepl = value
 
     # noinspection PyBroadException
     async def __load_cogs(self):

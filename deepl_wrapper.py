@@ -28,6 +28,9 @@ from typing import List, Optional
 
 
 class DeepLApiError(Exception):
+    """
+    An exception for DeepL API related request errors.
+    """
     pass
 
 
@@ -52,57 +55,96 @@ class DeepL:
         self._api_token = api_token
         self._user_agent = user_agent
         self._session = aiohttp_session
-        self.supported_languages: List['DeepL.Language'] = []
-        asyncio.create_task(self.__get_supported_languages())
+        self._supported_languages: List['DeepL.Language'] = []
+        asyncio.create_task(self.__set_supported_languages())
 
-    async def __get_supported_languages(self):
-        asd = await asyncio.gather(self.fetch_supported_languages())
-        self.supported_languages = asd[0]
+    @property
+    def supported_languages(self) -> List['DeepL.Language']:
+        return self._supported_languages
+
+    async def __set_supported_languages(self) -> None:
+        """
+        Fetch and set supported languages.
+        """
+        tmp = await asyncio.gather(self.fetch_supported_languages())
+        self._supported_languages = tmp[0]
 
     @staticmethod
-    def replace_aliases(search: str, ignore_case: bool = False) -> str:
+    def replace_aliases(representation: str, ignore_case: bool = False) -> str:
+        """
+        Replace aliases in a language representation string.
+        :param representation: A string representing a supported language.
+        :param ignore_case: Ignore case for the alias comparison.
+        :return: Language string representation with aliases converted to supported syntax.
+        """
         if ignore_case:
-            if search.casefold() == "en" or search.casefold() == "english":
+            if representation.casefold() == "en" or representation.casefold() == "english":
                 return "EN-US"
         else:
-            if search == "EN" or search == "English":
+            if representation == "EN" or representation == "English":
                 return "EN-US"
 
-        return search
+        return representation
 
-    def get_language(self, search: str, ignore_case: bool = False) -> Optional[Language]:
-        if not search:
+    def get_language(self, representation: str, ignore_case: bool = False) -> Optional[Language]:
+        """
+        Convert a string representing language to an actual Language object.
+        :param representation: String representing a language.
+        :param ignore_case: Ignore case for the search of an actual Language object.
+        :return: Language object if found from supported languages, None otherwise.
+        :raises ValueError: If the target language is not provided.
+        """
+        if not representation:
             raise ValueError("Target language must be provided.")
 
-        search = self.replace_aliases(search, ignore_case=ignore_case)
+        representation = self.replace_aliases(representation, ignore_case=ignore_case)
 
         if ignore_case:
-            search = search.casefold()
+            representation = representation.casefold()
         for language in self.supported_languages:
             lang_name = language.name
             lang_abbr = language.abbreviation
             if ignore_case:
                 lang_name = lang_name.casefold()
                 lang_abbr = lang_abbr.casefold()
-            if search == lang_name or search == lang_abbr:
+            if representation == lang_name or representation == lang_abbr:
                 return language
 
         return None
 
     def is_supported_language(self, search: str, ignore_case: bool = False) -> bool:
+        """
+        Check if language is supported. If the language is also needed, get_language may be better method.
+        :param search: Language to check for supported status.
+        :param ignore_case: Ignore case for the check.
+        :return: True if the language is supported, False otherwise.
+        """
         if not search:
             return False
 
         return self.get_language(search, ignore_case=ignore_case) is not None
 
     async def fetch_supported_languages(self) -> List[Language]:
+        """
+        Fetch supported language data from the DeepL API.
+        :return: List of Language objects.
+        """
         languages = []
         for raw in await self._request_deepl_api(self.ApiUrls.languages):
             languages.append(self.Language(raw))
 
         return languages
 
-    async def _request_deepl_api(self, url, params: dict = None, timeout: int = 5, **kwargs) -> dict:
+    async def _request_deepl_api(self, url: str, params: dict = None, timeout: int = 5, **kwargs) -> dict:
+        """
+        Fetch data from DeepL API.
+        :param url: DeepL API url to fetch data from.
+        :param params: Params needed for the API request.
+        :param timeout: Timeout for the request in seconds.
+        :param kwargs: Kwargs for aiohttp.ClientSession.get() method.
+        :return: DeepL API response in JSON.
+        :raises DeepLApiError: If there are too many frequent API requests or the API quota is exceeded.
+        """
         headers = {"Authorization": f"DeepL-Auth-Key {self._api_token}", "User-Agent": self._user_agent}
 
         async with self._session.get(url, headers=headers, params=params, timeout=timeout, **kwargs) as response:
@@ -111,12 +153,26 @@ class DeepL:
                                     "requests.")
             elif response.status == 456:
                 raise DeepLApiError("DeepL API quota exceeded. This can be resolved by upgrading DeepL subscription.")
+            response.raise_for_status()
+
             return await response.json(encoding="utf-8")
 
     async def get_usage(self) -> dict:
+        """
+        Get the monthly usage status of DeepL API account.
+        :return: Dictionary containing the usage data.
+        """
         return await self._request_deepl_api(self.ApiUrls.usage)
 
     async def translate_text(self, text: str, target_language: str, source_language: Optional[str] = None) -> List[str]:
+        """
+        Translate text from source language to target language.
+        :param text: Text to translate.
+        :param target_language: Target language to translate the text to.
+        :param source_language: Source language for the original text. If omitted, the source language is detected
+        automatically.
+        :return: List of translated texts.
+        """
         target_lang = self.get_language(target_language, ignore_case=True)
         if not target_lang:
             raise ValueError(f"Target language {target_language} is not supported.")
