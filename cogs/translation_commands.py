@@ -29,7 +29,7 @@ from translator_bot import TranslatorBot
 class TranslationCog(commands.Cog, name="Translations",
                      description="Commands for doing translations in Discord chat."):
     """
-    A cog encapsulating various translation commands and commands for 
+    A cog encapsulating various translation commands utilizing DeepL API.
     """
 
     def __init__(self, bot: TranslatorBot):
@@ -74,8 +74,7 @@ class TranslationCog(commands.Cog, name="Translations",
     async def source_translate(self, ctx: commands.Context, source_language: str, target_language: str, *, text: str) \
             -> None:
         """
-        Translate text from selected source language to the selected target language. Both source and target languages
-        are required.
+        Translate text from source language to target language. Both source and target languages are required.
         :param ctx:
         :param source_language: Source language for the original text.
         :param target_language: Target language for the translated text.
@@ -91,8 +90,8 @@ class TranslationCog(commands.Cog, name="Translations",
     @commands.hybrid_command(name="languages", description="Get list of all supported language abbreviations.")
     async def get_supported_languages(self, ctx: commands.Context):
         """
-        Get list of supported languages and their abbreviations. Both abbreviation and full langauge names can be used
-        for translation commands.
+        Get list of supported languages and their abbreviations. Both abbreviation and full langauge names are
+        compatible with translation commands.
         """
         supported_languages = []
         for language in self.bot.deepl.supported_languages:
