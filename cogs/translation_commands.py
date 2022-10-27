@@ -96,5 +96,5 @@ class TranslationCog(commands.Cog, name="Translations",
 
 
 # noinspection PyTypeChecker
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: TranslatorBot) -> None:
     await bot.add_cog(TranslationCog(bot))
