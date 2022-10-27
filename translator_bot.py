@@ -26,7 +26,6 @@ import discord
 import aiohttp
 import traceback
 import os
-import re
 from deepl_wrapper import DeepL
 from discord.ext import commands
 
@@ -93,39 +92,3 @@ class TranslatorBot(commands.Bot):
             raise ValueError("Url must be provided.")
         async with self.aiohttp_session.get(url, timeout=timeout, **kwargs) as response:
             return await response.text()
-
-    async def __translate_from_reply(self, message: discord.Message) -> None:
-        """
-        Translate a message from a replied message. Is triggered only when the bot is mentioned.
-        :param message: Message which triggered this event.
-        """
-        split = message.content.split()
-        if len(split) > 2:
-            await message.channel.send("I don't quite understand. "
-                                       "Please send only the possible target language after mentioning me.")
-            return
-        try:
-            target_language = split[1]
-        except IndexError:
-            target_language = "EN-US"
-
-        untranslated_text = message.reference.resolved.content
-        try:
-            translated = await self.deepl.translate_text(untranslated_text, target_language)
-            await message.channel.send("\n".join(translated))
-        except ValueError as e:
-            await message.channel.send(str(e))
-
-    async def on_message(self, message: discord.Message, /) -> None:
-        if message.author == self.user:
-            return
-        
-        startswith_mention = re.fullmatch(rf"<@!?{self.user.id}>", message.content.split()[0])
-        # Check if message contains only mention of this bot and contains a replied message reference
-        if startswith_mention and message.reference:
-            await self.__translate_from_reply(message)
-        elif startswith_mention:
-            await message.channel.send("Translate a message with a mention by also replying to "
-                                       "the translated message.")
-        else:
-            await self.process_commands(message)

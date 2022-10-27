@@ -55,15 +55,8 @@ class ManagementCog(commands.Cog, name="Management",
         :param ctx:
         :param extension_name: Extension name to load.
         """
-        try:
-            await self.bot.load_extension(extension_name)
-            await ctx.send(f"Successfully loaded extension `{extension_name}`.")
-        except commands.ExtensionAlreadyLoaded:
-            await ctx.send(f"Extension `{extension_name}` is already loaded. Please ensure the full "
-                           f"extension name was given.")
-        except commands.ExtensionNotFound:
-            await ctx.send(f"Extension `{extension_name}` could not be found. Please ensure the full "
-                           f"extension name was given.")
+        await self.bot.load_extension(extension_name)
+        await ctx.send(f"Successfully loaded extension `{extension_name}`.")
 
     @manage_extensions.command(name="unload")
     async def unload_cog(self, ctx: commands.Context, extension_name: str) -> None:
@@ -72,15 +65,8 @@ class ManagementCog(commands.Cog, name="Management",
         :param ctx:
         :param extension_name: Extension name to unload.
         """
-        try:
-            await self.bot.unload_extension(extension_name)
-            await ctx.send(f"Successfully unloaded extension `{extension_name}`.")
-        except commands.ExtensionNotFound:
-            await ctx.send(f"Extension `{extension_name}` could not be found. Please ensure the full "
-                           f"extension name was given.")
-        except commands.ExtensionNotLoaded:
-            await ctx.send(f"Extension `{extension_name}` is not loaded. Please ensure the full "
-                           f"extension name was given.")
+        await self.bot.unload_extension(extension_name)
+        await ctx.send(f"Successfully unloaded extension `{extension_name}`.")
 
     @manage_extensions.command(name="reload")
     async def reload_cog(self, ctx: commands.Context, extension_name: str) -> None:
@@ -89,15 +75,8 @@ class ManagementCog(commands.Cog, name="Management",
         :param ctx:
         :param extension_name: Extension name to reload.
         """
-        try:
-            await self.bot.reload_extension(extension_name)
-            await ctx.send(f"Successfully reloaded extension `{extension_name}`")
-        except commands.ExtensionNotFound:
-            await ctx.send(f"Extension `{extension_name}` could not be found. Please ensure the full "
-                           f"extension name was given.")
-        except commands.ExtensionNotLoaded:
-            await ctx.send(f"Extension `{extension_name}` is not loaded. Please ensure the full "
-                           f"extension name was given.")
+        await self.bot.reload_extension(extension_name)
+        await ctx.send(f"Successfully reloaded extension `{extension_name}`")
 
     @commands.command(name="usage")
     async def get_deepl_translation_limits(self, ctx: commands.Context) -> None:
@@ -129,13 +108,21 @@ class ManagementCog(commands.Cog, name="Management",
         Update supported languages in the supported_languages.json file.
         :param ctx:
         """
+        current_languages = self.bot.deepl.supported_languages
         langs = await self.bot.deepl.fetch_supported_languages()
-        jsonified = [language.as_dict() for language in langs]
+        updated_languages = [language.as_dict() for language in langs]
 
         with open("supported_languages.json", "w") as languages_file:
-            json.dump(jsonified, languages_file, indent=4, ensure_ascii=False)
+            json.dump(updated_languages, languages_file, indent=4, ensure_ascii=False)
 
-        await ctx.send("Supported languages updated. Commands cog must be reloaded after this operation.")
+        diff = len(updated_languages) - len(current_languages)
+        message = "Supported languages updated. "
+        if diff == 0:
+            message += "There were no new languages."
+        else:
+            message += f" There were {diff} new languages. Commands cog must be reloaded to take them into usage."
+
+        await ctx.send(message)
 
 
 async def setup(bot: TranslatorBot):

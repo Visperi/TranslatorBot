@@ -24,6 +24,7 @@ SOFTWARE.
 
 from discord.ext import commands
 from translator_bot import TranslatorBot
+from typing import List
 
 
 class TranslationCog(commands.Cog, name="Translations",
@@ -35,6 +36,11 @@ class TranslationCog(commands.Cog, name="Translations",
     def __init__(self, bot: TranslatorBot):
         self.bot = bot
 
+    @staticmethod
+    async def __send_translations(ctx: commands.Context, translations: List[str]) -> None:
+        formatted_translations = "\n".join(translations)
+        await ctx.reply(formatted_translations, mention_author=False)
+
     @commands.guild_only()
     @commands.hybrid_command(name="translate", description="Translate text to english.", aliases=["t"])
     async def translate(self, ctx: commands.Context, *, text: str) -> None:
@@ -44,11 +50,8 @@ class TranslationCog(commands.Cog, name="Translations",
         :param ctx:
         :param text: Text to translate. Source language is detected automatically.
         """
-        try:
-            translations = await self.bot.deepl.translate_text(text, "EN-US")
-            await ctx.send("\n".join(translations))
-        except Exception as e:
-            await ctx.send(str(e))
+        translations = await self.bot.deepl.translate_text(text, "EN-US")
+        await self.__send_translations(ctx, translations)
 
     @commands.guild_only()
     @commands.hybrid_command(name="ttranslate", description="Translate text to a target language.",
@@ -61,11 +64,8 @@ class TranslationCog(commands.Cog, name="Translations",
         :param target_language: Target language for the translation. Must be and abbreviation. Case-insensitive.
         :param text: Text to translate. Source language is detected automatically.
         """
-        try:
-            translations = await self.bot.deepl.translate_text(text, target_language=target_language)
-            await ctx.send("\n".join(translations))
-        except Exception as e:
-            await ctx.send(str(e))
+        translations = await self.bot.deepl.translate_text(text, target_language=target_language)
+        await self.__send_translations(ctx, translations)
 
     @commands.guild_only()
     @commands.hybrid_command(name="stranslate", aliases=["source_translate", "st"],
@@ -80,13 +80,9 @@ class TranslationCog(commands.Cog, name="Translations",
         :param target_language: Target language for the translated text.
         :param text: Text to translate.
         """
-        try:
-            translations = await self.bot.deepl.translate_text(text, target_language, source_language=source_language)
-            await ctx.send("\n".join(translations))
-        except Exception as e:
-            await ctx.send(str(e))
+        translations = await self.bot.deepl.translate_text(text, target_language, source_language=source_language)
+        await self.__send_translations(ctx, translations)
 
-    @commands.guild_only()
     @commands.hybrid_command(name="languages", description="Get list of all supported language abbreviations.")
     async def get_supported_languages(self, ctx: commands.Context):
         """
@@ -100,5 +96,5 @@ class TranslationCog(commands.Cog, name="Translations",
 
 
 # noinspection PyTypeChecker
-async def setup(bot: commands.Bot) -> None:
+async def setup(bot: TranslatorBot) -> None:
     await bot.add_cog(TranslationCog(bot))
