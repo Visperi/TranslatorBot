@@ -101,8 +101,7 @@ class TranslatorBot(commands.Bot):
         """
         split = message.content.split()
         if len(split) > 2:
-            await message.channel.send("I don't quite understand. "
-                                       "Please send only the possible target language after mentioning me.")
+            await message.channel.send("Please send only the possible non-English target language after mentioning me.")
             return
         try:
             target_language = split[1]
@@ -112,7 +111,7 @@ class TranslatorBot(commands.Bot):
         untranslated_text = message.reference.resolved.content
         try:
             translated = await self.deepl.translate_text(untranslated_text, target_language)
-            await message.channel.send("\n".join(translated))
+            await message.reply("\n".join(translated), mention_author=False)
         except ValueError as e:
             await message.channel.send(str(e))
 
