@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from __future__ import annotations
 import aiohttp
 import asyncio
 from typing import List, Optional
@@ -34,6 +35,17 @@ class DeepLApiError(Exception):
     pass
 
 
+class Language:
+
+    def __init__(self, raw: dict):
+        self.abbreviation: str = raw["language"]
+        self.name: str = raw["name"]
+        self.supports_formality: bool = raw["supports_formality"]
+
+    def as_dict(self) -> dict:
+        return dict(language=self.abbreviation, name=self.name, supports_formality=self.supports_formality)
+
+
 class DeepL:
 
     class ApiUrls:
@@ -42,24 +54,15 @@ class DeepL:
         usage = f"{base_url}/usage"
         languages = f"{base_url}/languages?type=target"
 
-    class Language:
-        def __init__(self, raw: dict):
-            self.abbreviation: str = raw["language"]
-            self.name: str = raw["name"]
-            self.supports_formality: bool = raw["supports_formality"]
-
-        def as_dict(self) -> dict:
-            return dict(language=self.abbreviation, name=self.name, supports_formality=self.supports_formality)
-
     def __init__(self, api_token: str, user_agent: str, aiohttp_session: aiohttp.ClientSession):
         self._api_token = api_token
         self._user_agent = user_agent
         self._session = aiohttp_session
-        self._supported_languages: List['DeepL.Language'] = []
+        self._supported_languages: List[Language] = []
         asyncio.create_task(self.__set_supported_languages())
 
     @property
-    def supported_languages(self) -> List['DeepL.Language']:
+    def supported_languages(self) -> List[Language]:
         return self._supported_languages
 
     async def __set_supported_languages(self) -> None:
@@ -131,7 +134,7 @@ class DeepL:
         """
         languages = []
         for raw in await self._request_deepl_api(self.ApiUrls.languages):
-            languages.append(self.Language(raw))
+            languages.append(Language(raw))
 
         return languages
 
@@ -175,9 +178,9 @@ class DeepL:
         """
         target_lang = self.get_language(target_language, ignore_case=True)
         if not target_lang:
-            raise ValueError(f"Target language {target_language} is not supported.")
+            raise ValueError(f"Target language `{target_language}` is not supported.")
         if source_language and not self.get_language(source_language, ignore_case=True):
-            raise ValueError(f"Target source language {source_language} is not supported.")
+            raise ValueError(f"Target source language `{source_language}` is not supported.")
 
         params = dict(text=text, target_lang=target_lang.abbreviation)
         if source_language:
