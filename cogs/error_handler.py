@@ -27,6 +27,9 @@ from typing import List, Any, Union
 
 
 class ErrorHandlerCog(commands.Cog):
+    """
+    A cog for handling exceptions raised during Discord command execution.
+    """
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
