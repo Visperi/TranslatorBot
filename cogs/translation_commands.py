@@ -50,7 +50,7 @@ class TranslationCog(commands.Cog, name="Translations",
         :param ctx:
         :param text: Text to translate. Source language is detected automatically.
         """
-        translations = await self.bot.deepl.translate_text(text, "EN-US")
+        translations = await self.bot.deepl_client.translate(text, "EN-US")
         await self.__send_translations(ctx, translations)
 
     @commands.guild_only()
@@ -64,7 +64,7 @@ class TranslationCog(commands.Cog, name="Translations",
         :param target_language: Target language for the translation. Must be and abbreviation. Case-insensitive.
         :param text: Text to translate. Source language is detected automatically.
         """
-        translations = await self.bot.deepl.translate_text(text, target_language=target_language)
+        translations = await self.bot.deepl_client.translate(text, target_language=target_language)
         await self.__send_translations(ctx, translations)
 
     @commands.guild_only()
@@ -80,7 +80,7 @@ class TranslationCog(commands.Cog, name="Translations",
         :param target_language: Target language for the translated text.
         :param text: Text to translate.
         """
-        translations = await self.bot.deepl.translate_text(text, target_language, source_language=source_language)
+        translations = await self.bot.deepl_client.translate(text, target_language, source_language=source_language)
         await self.__send_translations(ctx, translations)
 
     @commands.hybrid_command(name="languages", description="Get list of all supported language abbreviations.")
@@ -90,8 +90,8 @@ class TranslationCog(commands.Cog, name="Translations",
         compatible with translation commands.
         """
         supported_languages = []
-        for language in self.bot.deepl.supported_languages:
-            supported_languages.append(f"`{language.abbreviation}`: {language.name}")
+        for language in self.bot.deepl_client.supported_languages:
+            supported_languages.append(f"`{language.language_code}`: {language.name}")
         await ctx.send("\n".join(supported_languages))
 
 
