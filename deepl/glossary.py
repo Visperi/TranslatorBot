@@ -22,24 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import json
-from translator_bot import TranslatorBot
-from typing import Union, Iterable
-
-BOT_VERSION = "0.8"
-COMMAND_PREFIX: Union[str, Iterable[str]] = "?"
+from .models import Glossary as GlossaryPayload
 
 
-def start():
-    with open("credentials.json", "r") as credential_file:
-        credentials = json.load(credential_file)
+class Glossary:
 
-    discord_api_token = credentials["api_tokens"]["discord"]
-    deepl_api_token = credentials["api_tokens"]["deepl"]
-    bot = TranslatorBot(deepl_api_token, COMMAND_PREFIX)
-
-    bot.run(discord_api_token, reconnect=True)
-
-
-if __name__ == '__main__':
-    start()
+    def __init__(self, payload: GlossaryPayload):
+        self.glossary_id = payload["glossary_id"]
+        self.name = payload["name"]
+        self.ready = payload["ready"]
+        self.source_lang = payload["source_lang"]
+        self.target_lang = payload["target_lang"]
+        self.creation_time = payload["creation_time"]
+        self.entry_count = payload["entry_count"]

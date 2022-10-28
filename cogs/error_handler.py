@@ -22,8 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import sys
+import traceback
+import datetime
 from discord.ext import commands
 from typing import List, Any, Union
+from deepl.errors import *
 
 
 class ErrorHandlerCog(commands.Cog):
@@ -51,44 +55,60 @@ class ErrorHandlerCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandInvokeError) -> None:
-        if isinstance(error, commands.CommandNotFound) or isinstance(error, commands.MissingRequiredArgument):
+        original = error.original
+
+        if isinstance(original, commands.CommandNotFound) or isinstance(original, commands.MissingRequiredArgument):
             return
 
-        if isinstance(error, commands.DisabledCommand):
+        if isinstance(original, commands.DisabledCommand):
             await ctx.send(f"Command `{ctx.command}` is currently disabled.")
 
-        elif isinstance(error, commands.NoPrivateMessage):
+        elif isinstance(original, commands.NoPrivateMessage):
             await ctx.send("This command is not supported in private messages.")
 
-        elif isinstance(error, commands.PrivateMessageOnly):
+        elif isinstance(original, commands.PrivateMessageOnly):
             await ctx.send("This command is supported only in private messages.")
 
-        elif isinstance(error, commands.NotOwner):
+        # Permission exceptions
+        elif isinstance(original, commands.NotOwner):
             await ctx.send("This command can be executed only by the bot owner.")
 
-        # Permission exceptions
-        elif isinstance(error, commands.MissingPermissions):
-            missing = self.__parse_missing(error.missing_permissions, ", ")
+        elif isinstance(original, commands.MissingPermissions):
+            missing = self.__parse_missing(original.missing_permissions, ", ")
             await ctx.send(f"Sorry, you are missing following permissions to run this command: {missing}")
 
-        elif isinstance(error, commands.MissingAnyRole):
-            missing = self.__parse_missing(error.missing_roles, ", ")
+        elif isinstance(original, commands.MissingAnyRole):
+            missing = self.__parse_missing(original.missing_roles, ", ")
             await ctx.send(f"Sorry, you need any of the following roles to run this command: {missing}")
 
-        elif isinstance(error, commands.MissingRole):
-            await ctx.send(f"Sorry, you are missing following role to run this command: `{error.missing_role}`")
+        elif isinstance(original, commands.MissingRole):
+            await ctx.send(f"Sorry, you are missing following role to run this command: `{original.missing_role}`")
 
         # Cog exceptions
-        if isinstance(error, commands.ExtensionAlreadyLoaded):
-            await ctx.send(f"Extension `{error.name}` is already loaded. Please ensure the full "
+        elif isinstance(original, commands.ExtensionAlreadyLoaded):
+            await ctx.send(f"Extension `{original.name}` is already loaded. Please ensure the full "
                            f"extension name was given.")
 
-        if isinstance(error, commands.ExtensionNotFound):
-            await ctx.send(f"Extension `{error.name}` could not be found. Please ensure the full "
+        elif isinstance(original, commands.ExtensionNotFound):
+            await ctx.send(f"Extension `{original.name}` could not be found. Please ensure the full "
                            f"extension name was given.")
 
+        elif isinstance(original, commands.ExtensionNotLoaded):
+            await ctx.send(f"Extension `{original.name}` is not loaded. Please ensure the full extension name was given.")
+
+        # DeepL related errors. Rest of the expected exceptions should fall into this category
+        elif isinstance(original, DeepLError):
+            await ctx.send(str(original))
+
+        # Unexpected exceptions fall here
         else:
-            await ctx.send(str(error.original))
+            ts = datetime.datetime.now().replace(microsecond=0)
+            print(f"[{ts}] Ignoring unexpected exception:", file=sys.stderr)
+            traceback.print_exception(type(original), error, error.__traceback__, file=sys.stderr)
+            print()
+
+            await ctx.send(f"Unexpected error: `{type(original).__name__}`. Contact the bot owner to resolve "
+                           f"this issue.")
 
 
 async def setup(bot: commands.Bot) -> None:

@@ -22,24 +22,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import json
-from translator_bot import TranslatorBot
-from typing import Union, Iterable
-
-BOT_VERSION = "0.8"
-COMMAND_PREFIX: Union[str, Iterable[str]] = "?"
+from typing import TypedDict
 
 
-def start():
-    with open("credentials.json", "r") as credential_file:
-        credentials = json.load(credential_file)
-
-    discord_api_token = credentials["api_tokens"]["discord"]
-    deepl_api_token = credentials["api_tokens"]["deepl"]
-    bot = TranslatorBot(deepl_api_token, COMMAND_PREFIX)
-
-    bot.run(discord_api_token, reconnect=True)
+class LanguagePair(TypedDict):
+    source_lang: str
+    target_lang: str
 
 
-if __name__ == '__main__':
-    start()
+class Glossary(LanguagePair):
+    glossary_id: str
+    name: str
+    ready: bool
+    creation_time: str
+    entry_count: int
+
+
+class Translation(TypedDict):
+    detected_source_language: str
+    text: str
+
+
+class Language(TypedDict):
+    language: str
+    name: str
+    supports_formality: bool

@@ -22,13 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+import datetime
 import discord
 import aiohttp
 import traceback
 import os
-from deepl_wrapper import DeepL
 from discord.ext import commands
-from typing import Union, Iterable
+from typing import Union, Iterable, Optional
+from deepl import deepl
 
 
 class CommandPrefixParser:
@@ -45,32 +46,28 @@ class TranslatorBot(commands.Bot):
     def __init__(self, deepl_api_token: str, command_prefix: Union[str, Iterable[str]]):
         intents = discord.Intents.default()
         intents.message_content = True
-        self._aiohttp_session = None
-        self._deepl = None
-        self._deepl_api_token = deepl_api_token
-        self.cogs_path = f"{os.path.dirname(__file__)}/cogs"
         prefix_parser = CommandPrefixParser(command_prefix)
+        self._aiohttp_session: Optional[aiohttp.ClientSession] = None
+        self._deepl_client: Optional[deepl.Client] = None
+        self._deepl_api_token: str = deepl_api_token
+        self.cogs_path: str = f"{os.path.dirname(__file__)}/cogs"
         super().__init__(command_prefix=prefix_parser, intents=intents, case_insensitive=True)
+
+    async def setup_hook(self):
+        await self.__load_cogs()
+        self._aiohttp_session = aiohttp.ClientSession(loop=self.loop, raise_for_status=True)
+        self._deepl_client = deepl.Client(self._deepl_api_token, str(self.user), self.aiohttp_session)
+        supported_languages = await self.deepl_client.update_supported_languages()
+        ts = datetime.datetime.now().replace(microsecond=0)
+        print(f"[{ts}] Loaded {len(supported_languages)} supported languages.")
 
     @property
     def aiohttp_session(self):
         return self._aiohttp_session
 
-    @aiohttp_session.setter
-    def aiohttp_session(self, value: aiohttp.ClientSession):
-        if not value:
-            raise ValueError("aiohttp.ClientSession must be rovided.")
-        self._aiohttp_session = value
-
     @property
-    def deepl(self):
-        return self._deepl
-
-    @deepl.setter
-    def deepl(self, value: DeepL):
-        if not value:
-            raise ValueError("DeepL object must be provided.")
-        self._deepl = value
+    def deepl_client(self):
+        return self._deepl_client
 
     # noinspection PyBroadException
     async def __load_cogs(self):
@@ -82,11 +79,6 @@ class TranslatorBot(commands.Bot):
             except:
                 print(f"Failed to load extension {extension}")
                 traceback.print_exc()
-
-    async def setup_hook(self):
-        await self.__load_cogs()
-        self.aiohttp_session = aiohttp.ClientSession(loop=self.loop, raise_for_status=True)
-        self.deepl = DeepL(self._deepl_api_token, str(self.user), self.aiohttp_session)
 
     async def fetch_url(self, url: str, timeout: int = 10, **kwargs) -> str:
         if not url:

@@ -24,8 +24,12 @@ SOFTWARE.
 
 import discord
 import re
+import traceback
+import sys
+import datetime
 from discord.ext import commands
 from translator_bot import TranslatorBot
+from deepl.errors import *
 
 
 class EventListenerCog(commands.Cog):
@@ -52,10 +56,18 @@ class EventListenerCog(commands.Cog):
 
         untranslated_text = message.reference.resolved.content
         try:
-            translated = await self.bot.deepl.translate_text(untranslated_text, target_language)
+            translated = await self.bot.deepl_client.translate(untranslated_text, target_language)
             await message.reply("\n".join(translated), mention_author=False)
-        except ValueError as e:
+        except DeepLError as e:
             await message.channel.send(str(e))
+        except Exception as e:
+            ts = datetime.datetime.now().replace(microsecond=0)
+            print(f"[{ts}] Ignoring unexpected exception:", file=sys.stderr)
+            traceback.print_exception(type(e), e, e.__traceback__, file=sys.stderr)
+            print()
+
+            await message.channel.send(f"Unexpected error: `{type(e).__name__}`. Contact the bot owner to resolve "
+                                       f"this issue.")
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message, /) -> None:

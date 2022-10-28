@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import json
 from discord.ext import commands
 from translator_bot import TranslatorBot
 
@@ -84,7 +83,7 @@ class ManagementCog(commands.Cog, name="Management",
         Get DeepL API usage status for the bot.
         :param ctx:
         """
-        response = await self.bot.deepl.get_usage()
+        response = await self.bot.deepl_client.get_usage()
         character_count = response["character_count"]
         character_limit = response["character_limit"]
 
@@ -105,22 +104,19 @@ class ManagementCog(commands.Cog, name="Management",
     @commands.command("getlangs")
     async def update_supported_languages(self, ctx: commands.Context) -> None:
         """
-        Update supported languages in the supported_languages.json file.
+        Update supported languages.
         :param ctx:
         """
-        current_languages = self.bot.deepl.supported_languages
-        langs = await self.bot.deepl.fetch_supported_languages()
-        updated_languages = [language.as_dict() for language in langs]
-
-        with open("supported_languages.json", "w") as languages_file:
-            json.dump(updated_languages, languages_file, indent=4, ensure_ascii=False)
+        current_languages = self.bot.deepl_client.supported_languages
+        updated_languages = await self.bot.deepl_client.update_supported_languages()
 
         diff = len(updated_languages) - len(current_languages)
         message = "Supported languages updated. "
         if diff == 0:
             message += "There were no new languages."
         else:
-            message += f" There were {diff} new languages. Commands cog must be reloaded to take them into usage."
+            message += f" There were {diff} new languages. Translation commands cog must be reloaded to " \
+                       f"take them into usage."
 
         await ctx.send(message)
 

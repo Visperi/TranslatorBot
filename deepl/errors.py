@@ -22,24 +22,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import json
-from translator_bot import TranslatorBot
-from typing import Union, Iterable
-
-BOT_VERSION = "0.8"
-COMMAND_PREFIX: Union[str, Iterable[str]] = "?"
+class DeepLError(Exception):
+    """Base exception for DeepL API related exceptions"""
+    pass
 
 
-def start():
-    with open("credentials.json", "r") as credential_file:
-        credentials = json.load(credential_file)
-
-    discord_api_token = credentials["api_tokens"]["discord"]
-    deepl_api_token = credentials["api_tokens"]["deepl"]
-    bot = TranslatorBot(deepl_api_token, COMMAND_PREFIX)
-
-    bot.run(discord_api_token, reconnect=True)
+class DeepLQuotaExceededError(DeepLError):
+    """Exception raised when DeepL API quota is exceeded"""
+    pass
 
 
-if __name__ == '__main__':
-    start()
+class TooManyRequestsError(DeepLError):
+    """Exception raised when too many or too frequent requests are sent to DeepL API"""
+    pass
+
+
+class LanguageNotSupportedError(DeepLError):
+    """Exception raised when a language is not supported in DeepL API"""
+    pass

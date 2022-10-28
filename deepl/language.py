@@ -22,24 +22,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import json
-from translator_bot import TranslatorBot
-from typing import Union, Iterable
-
-BOT_VERSION = "0.8"
-COMMAND_PREFIX: Union[str, Iterable[str]] = "?"
+from .models import Language as LanguagePayload
 
 
-def start():
-    with open("credentials.json", "r") as credential_file:
-        credentials = json.load(credential_file)
+class Language:
 
-    discord_api_token = credentials["api_tokens"]["discord"]
-    deepl_api_token = credentials["api_tokens"]["deepl"]
-    bot = TranslatorBot(deepl_api_token, COMMAND_PREFIX)
+    def __init__(self, payload: LanguagePayload) -> None:
+        self._language_code = payload["language"]
+        self._name = payload["name"]
+        self._supports_formality = payload["supports_formality"]
 
-    bot.run(discord_api_token, reconnect=True)
+    @property
+    def language_code(self) -> str:
+        return self._language_code
 
+    @property
+    def name(self) -> str:
+        return self._name
 
-if __name__ == '__main__':
-    start()
+    @property
+    def supports_formality(self) -> bool:
+        return self._supports_formality
+
+    def as_dict(self) -> dict:
+        return dict(language=self.language_code, name=self.name, supports_formality=self.supports_formality)
