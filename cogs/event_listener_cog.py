@@ -63,7 +63,7 @@ class EventListenerCog(commands.Cog):
             return
 
         startswith_mention = re.fullmatch(rf"<@!?{self.bot.user.id}>", message.content.split()[0])
-        # Check if message mention of this bot and contains a replied message reference
+        # Attempt to translate only if the message contains mention of this bot and a replied message reference
         if startswith_mention and message.reference:
             await self.__translate_from_reply(message)
         elif startswith_mention:
