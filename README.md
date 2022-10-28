@@ -1,5 +1,6 @@
 # TranslatorBot
-A bot for translating Discord messages utilizing DeepL software. Both slash commands and message commands are supported.
+A bot for translating Discord messages utilizing DeepL software. Both slash commands and message commands are supported. 
+For supported languages see section [Supported languages](#supported-languages)
 
 **Python 3.8 or higher is required to run this bot**
 
@@ -9,7 +10,7 @@ For package requirements see the `requirements.txt`
 
 Currently, this bot is not in public usage. To run the bot, all you need is:
 
-- Dicord bot application and its API token: [Discord application docs](https://discordapp.com/developers/applications)
+- Discord bot application and its API token: [Discord application docs](https://discordapp.com/developers/applications)
 - DeepL account and token to their REST API: [DeepL API docs](https://www.deepl.com/pro-api?cta=header-pro-api/)
   - For now only the free DeepL version with monthly 500 000-character limit is supported
 
@@ -61,6 +62,40 @@ will be English.
 - Support dynamic command prefix between Discord guilds
 - Support DeepL glossary feature
 - Support also source language in the quick translation
+
+## Supported languages
+
+Following languages are currently supported:
+
+- `BG`: Bulgarian
+- `CS`: Czech
+- `DA`: Danish
+- `DE`: German
+- `EL`: Greek
+- `EN-GB`: English (British)
+- `EN-US`: English (American)
+- `ES`: Spanish
+- `ET`: Estonian
+- `FI`: Finnish
+- `FR`: French
+- `HU`: Hungarian
+- `ID`: Indonesian
+- `IT`: Italian
+- `JA`: Japanese
+- `LT`: Lithuanian
+- `LV`: Latvian
+- `NL`: Dutch
+- `PL`: Polish
+- `PT-BR`: Portuguese (Brazilian)
+- `PT-PT`: Portuguese (European)
+- `RO`: Romanian
+- `RU`: Russian
+- `SK`: Slovak
+- `SL`: Slovenian
+- `SV`: Swedish
+- `TR`: Turkish
+- `UK`: Ukrainian
+- `ZH`: Chinese (simplified)
 
 # License
 MIT License
