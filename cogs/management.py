@@ -115,8 +115,7 @@ class ManagementCog(commands.Cog, name="Management",
         if diff == 0:
             message += "There were no new languages."
         else:
-            message += f" There were {diff} new languages. Translation commands cog must be reloaded to " \
-                       f"take them into usage."
+            message += f" There were {diff} new languages."
 
         await ctx.send(message)
 
