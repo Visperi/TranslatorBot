@@ -28,11 +28,12 @@ import traceback
 import os
 from deepl_wrapper import DeepL
 from discord.ext import commands
+from typing import Union, Iterable
 
 
 class CommandPrefixParser:
 
-    def __init__(self, command_prefix: str = "!"):
+    def __init__(self, command_prefix: Union[str, Iterable[str]]):
         self.command_prefix = command_prefix
 
     def __call__(self, *args, **kwargs):
@@ -41,7 +42,7 @@ class CommandPrefixParser:
 
 class TranslatorBot(commands.Bot):
 
-    def __init__(self, deepl_api_token: str, command_prefix: str = "?"):
+    def __init__(self, deepl_api_token: str, command_prefix: Union[str, Iterable[str]]):
         intents = discord.Intents.default()
         intents.message_content = True
         self._aiohttp_session = None

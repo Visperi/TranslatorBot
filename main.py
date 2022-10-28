@@ -24,8 +24,10 @@ SOFTWARE.
 
 import json
 from translator_bot import TranslatorBot
+from typing import Union, Iterable
 
-BOT_VERSION = "0.6"
+BOT_VERSION = "0.7"
+COMMAND_PREFIX: Union[str, Iterable[str]] = "?"
 
 
 def start():
@@ -34,7 +36,7 @@ def start():
 
     discord_api_token = credentials["api_tokens"]["discord"]
     deepl_api_token = credentials["api_tokens"]["deepl"]
-    bot = TranslatorBot(deepl_api_token)
+    bot = TranslatorBot(deepl_api_token, COMMAND_PREFIX)
 
     bot.run(discord_api_token, reconnect=True)
 
