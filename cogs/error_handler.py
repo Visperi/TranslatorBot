@@ -53,9 +53,20 @@ class ErrorHandlerCog(commands.Cog):
 
         return ret
 
+    @staticmethod
+    def __log_unexpected_error(error: Exception):
+        ts = datetime.datetime.now().replace(microsecond=0)
+        print(f"[{ts}] Ignoring unexpected exception:", file=sys.stderr)
+        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandInvokeError) -> None:
-        original = error.original
+        try:
+            original = error.original
+        except AttributeError:
+            # Some really unexpected error happened
+            self.__log_unexpected_error(error)
+            return
 
         if isinstance(original, commands.CommandNotFound) or isinstance(original, commands.MissingRequiredArgument):
             return
@@ -102,11 +113,8 @@ class ErrorHandlerCog(commands.Cog):
 
         # Unexpected exceptions fall here
         else:
-            ts = datetime.datetime.now().replace(microsecond=0)
-            print(f"[{ts}] Ignoring unexpected exception:", file=sys.stderr)
-            traceback.print_exception(type(original), error, error.__traceback__, file=sys.stderr)
+            self.__log_unexpected_error(original)
             print()
-
             await ctx.send(f"Unexpected error: `{type(original).__name__}`. Contact the bot owner to resolve "
                            f"this issue.")
 
