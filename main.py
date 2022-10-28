@@ -26,7 +26,7 @@ import json
 from translator_bot import TranslatorBot
 from typing import Union, Iterable
 
-BOT_VERSION = "0.7"
+BOT_VERSION = "0.8"
 COMMAND_PREFIX: Union[str, Iterable[str]] = "?"
 
 
