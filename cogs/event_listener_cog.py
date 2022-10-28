@@ -76,11 +76,10 @@ class EventListenerCog(commands.Cog):
 
         try:
             startswith_mention = re.fullmatch(rf"<@!?{self.bot.user.id}>", message.content.split()[0])
-            is_quick_translation = startswith_mention and message.reference
         except IndexError:
             startswith_mention = False
-            is_quick_translation = False
 
+        is_quick_translation = startswith_mention and message.reference
         # Attempt to translate only if the message contains mention of this bot and a replied message reference
         if is_quick_translation:
             await self.__translate_from_reply(message)
