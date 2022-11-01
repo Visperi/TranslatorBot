@@ -26,6 +26,7 @@ from __future__ import annotations
 from typing import List, Optional
 from .language import Language
 from .errors import *
+from . import utils
 import aiohttp
 
 
@@ -51,23 +52,6 @@ class Client:
     def supported_languages(self) -> List[Language]:
         return self._supported_languages
 
-    @staticmethod
-    def replace_aliases(representation: str, ignore_case: bool = False) -> str:
-        """
-        Replace aliases in a language representation string.
-        :param representation: A string representing a supported language.
-        :param ignore_case: Ignore case for the alias comparison.
-        :return: Language string representation with aliases converted to supported syntax.
-        """
-        if ignore_case:
-            if representation.casefold() == "en" or representation.casefold() == "english":
-                return "EN-US"
-        else:
-            if representation == "EN" or representation == "English":
-                return "EN-US"
-
-        return representation
-
     def get_language(self, representation: str, ignore_case: bool = False) -> Optional[Language]:
         """
         Convert a string representing language to an actual Language object.
@@ -79,7 +63,7 @@ class Client:
         if not representation:
             raise ValueError("Target language must be provided.")
 
-        representation = self.replace_aliases(representation, ignore_case=ignore_case)
+        representation = utils.replace_aliases(representation, ignore_case=ignore_case)
 
         if ignore_case:
             representation = representation.casefold()
