@@ -23,14 +23,10 @@ SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import List, Optional, Union
+from typing import List, Optional
 from .language import Language
 from .errors import *
-import os
 import aiohttp
-
-
-PathLike = Union[str, bytes, os.PathLike]
 
 
 class Client:
