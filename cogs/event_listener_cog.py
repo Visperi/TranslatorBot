@@ -56,7 +56,7 @@ class EventListenerCog(commands.Cog):
 
         untranslated_text = message.reference.resolved.content
         if not untranslated_text:
-            await message.reply("The replied message must contain text for translation.")
+            await message.reply("The replied message must contain text for translation.", mention_author=False)
             return
 
         try:
