@@ -141,7 +141,12 @@ class Client:
         :param source_language: Source language for the original text. If omitted, the source language is detected
         automatically.
         :return: List of translated texts.
+        :exception ValueError: Text to translate has falsy value.
+        :exception LanguageNotSupportedError: Target language or source language is not supported.
         """
+        if not text:
+            raise ValueError("Translated text must be provided.")
+
         target_lang = self.get_language(target_language, ignore_case=True)
         if not target_lang:
             raise LanguageNotSupportedError(f"Target language `{target_language}` is not supported.")
