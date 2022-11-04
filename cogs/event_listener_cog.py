@@ -55,6 +55,10 @@ class EventListenerCog(commands.Cog):
             target_language = "EN-US"
 
         untranslated_text = message.reference.resolved.content
+        if not untranslated_text:
+            await message.reply("The replied message must contain text for translation.")
+            return
+
         try:
             translated = await self.bot.deepl_client.translate(untranslated_text, target_language)
             await message.reply("\n".join(translated), mention_author=False)
@@ -79,8 +83,8 @@ class EventListenerCog(commands.Cog):
         except IndexError:
             startswith_mention = False
 
-        is_quick_translation = startswith_mention and message.reference
         # Attempt to translate only if the message contains mention of this bot and a replied message reference
+        is_quick_translation = startswith_mention and message.reference
         if is_quick_translation:
             await self.__translate_from_reply(message)
         elif startswith_mention:
