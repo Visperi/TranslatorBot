@@ -12,7 +12,7 @@ Currently, this bot is not in public usage. To run the bot, all you need is:
 
 - Discord bot application and its API token: [Discord application docs](https://discordapp.com/developers/applications)
 - DeepL account and token to their REST API: [DeepL API docs](https://www.deepl.com/pro-api?cta=header-pro-api/)
-  - For now only the free DeepL version with monthly 500 000-character limit is supported
+  - Both free and pro versions are supported. The version is automatically detected from the API key
 
 Final step before running the bot is to make `credentials.json` file to the root directory of this bot. 
 Place the generated API tokens there in below JSON syntax:
@@ -58,14 +58,14 @@ will be English.
 
 ## TODO features
 
-- Support paid DeepL API
 - Support dynamic command prefix between Discord guilds
 - Support DeepL glossary feature
 - Support also source language in the quick translation
+- Support logging in the DeepL package
 
 ## Supported languages
 
-Following languages are currently supported:
+Following languages are currently supported by the DeepL API:
 
 - `BG`: Bulgarian
 - `CS`: Czech
