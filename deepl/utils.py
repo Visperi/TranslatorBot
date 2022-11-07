@@ -34,22 +34,58 @@ def replace_aliases(representation: str, ignore_case: bool = False) -> str:
     :return: Language string representation with aliases converted to supported syntax. Returns the original
     representation if no aliases are found.
     """
+    # TODO: Which English and Portuguese to prefer here?
     aliases: Dict[str, List[str]] = {
         "EN-US": ["EN", "English"],
         "PT-PT": ["PT", "Portuguese"],
         "ZH": ["Chinese"]
     }
 
+    if not representation:
+        raise ValueError("Language representation must be provided.")
+
+    lookup = representation
     if ignore_case:
-        representation = representation.casefold()
+        lookup = representation.casefold()
 
     for language_code, language_aliases in aliases.items():
         if ignore_case:
             language_aliases = [alias.casefold() for alias in language_aliases]
-        if representation in language_aliases:
+        if lookup in language_aliases:
             return language_code
 
     return representation
+
+
+def strip_source_language_exceptions(representation: str, ignore_case: bool = False) -> str:
+    """
+    Strip out possible parts from a language representation that are only usable in a target language. Replaces also
+    aliases, but returns the original representation if nothing needs to be stripped.
+
+    :param representation: A string representing a supported language.
+    :param ignore_case: Ignore case for the alias comparison and stripping.
+    :return: Language representation with aliases replaced and invalid source language parts stripped.
+    The original representation is returned instead if nothing needs to be replaced.
+    :exception ValueError: The representation has a falsy value.
+    """
+    exceptions = [
+        "PT-BR",
+        "PT-PT",
+        "EN-US",
+        "EN-GB"
+    ]
+
+    lookup = replace_aliases(representation, ignore_case=ignore_case)
+    if ignore_case:
+        exceptions = [exc.casefold() for exc in exceptions]
+        lookup = lookup.casefold()
+
+    if lookup in exceptions:
+        return representation.split("-")[0].upper()
+
+    return representation
+
+# TODO: Add docstrings to below functions
 
 
 class _CustomFormatter(logging.Formatter):
