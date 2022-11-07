@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+
+from deepl.translation import Translation
 from discord.ext import commands
 from translator_bot import TranslatorBot
 from typing import List
@@ -37,9 +39,14 @@ class TranslationCog(commands.Cog, name="Translations",
         self.bot = bot
 
     @staticmethod
-    async def __send_translations(ctx: commands.Context, translations: List[str]) -> None:
-        formatted_translations = "\n".join(translations)
-        await ctx.reply(formatted_translations, mention_author=False)
+    async def __send_translations(ctx: commands.Context, translations: List[Translation]) -> None:
+        formatted_translations = []
+        for translation in translations:
+            source_lang = translation.source_language.language_code
+            target_lang = translation.target_language.language_code
+            formatted_translations.append(f"{source_lang} -> {target_lang}: {translation.text}")
+
+        await ctx.reply("\n".join(formatted_translations), mention_author=False)
 
     @commands.guild_only()
     @commands.hybrid_command(name="translate", description="Translate text to english.", aliases=["t"])
