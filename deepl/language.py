@@ -26,6 +26,9 @@ from .models import Language as LanguagePayload
 
 
 class Language:
+    """
+    An object representing a supported language in DeepL API.
+    """
 
     def __init__(self, payload: LanguagePayload) -> None:
         self._language_code = payload["language"]
