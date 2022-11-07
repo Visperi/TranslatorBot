@@ -25,12 +25,9 @@ SOFTWARE.
 from typing import TypedDict
 
 
-class LanguagePair(TypedDict):
+class Glossary(TypedDict):
     source_lang: str
     target_lang: str
-
-
-class Glossary(LanguagePair):
     glossary_id: str
     name: str
     ready: bool
