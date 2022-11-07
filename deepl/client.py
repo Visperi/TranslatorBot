@@ -32,25 +32,35 @@ import aiohttp
 
 class Client:
 
-    class ApiUrls:
-        base_url = "https://api-free.deepl.com/v2"
-        translate = f"{base_url}/translate"
-        usage = f"{base_url}/usage"
-        languages = f"{base_url}/languages?type=target"
+    class ApiPath:
+        translate = f"/translate"
+        usage = f"/usage"
+        languages = f"/languages?type=target"
 
     def __init__(
             self,
             api_token: str, user_agent: str,
             aiohttp_session: aiohttp.ClientSession
     ) -> None:
-        self._api_token = api_token
         self._user_agent = user_agent
         self._session = aiohttp_session
         self._supported_languages: List[Language] = []
 
+        self._api_token = api_token
+        if api_token.endswith(":fx"):
+            self._version = "free"
+        else:
+            self._version = "pro"
+
+        utils.log(f"Logging in using {self._version} version DeepL token.")
+
     @property
     def supported_languages(self) -> List[Language]:
         return self._supported_languages
+
+    @property
+    def version(self) -> str:
+        return self._version
 
     def get_language(self, representation: str, ignore_case: bool = False) -> Optional[Language]:
         """
@@ -96,22 +106,28 @@ class Client:
         :return: List of supported languages as Language objects.
         """
         languages = []
-        for raw in await self.__request_deepl_api(self.ApiUrls.languages):
+        for raw in await self.__request_deepl_api(self.ApiPath.languages):
             languages.append(Language(raw))
 
         self._supported_languages = languages
         return languages
 
-    async def __request_deepl_api(self, url: str, params: dict = None, timeout: int = 5, **kwargs) -> dict:
+    async def __request_deepl_api(self, path: str, params: dict = None, timeout: int = 5, **kwargs) -> dict:
         """
         Fetch data from DeepL API.
-        :param url: DeepL API url to fetch data from.
+        :param path: DeepL API url to fetch data from.
         :param params: Params needed for the API request.
         :param timeout: Timeout for the request in seconds.
         :param kwargs: Kwargs for aiohttp.ClientSession.get() method.
         :return: DeepL API response in JSON.
         :raises DeepLApiError: If there are too many frequent API requests or the API quota is exceeded.
         """
+        if self.version == "free":
+            base_url = "https://api-free.deepl.com/v2/"
+        else:
+            base_url = "https://api.deepl.com/v2/"
+
+        url = base_url + path.lstrip("/")
         headers = {"Authorization": f"DeepL-Auth-Key {self._api_token}", "User-Agent": self._user_agent}
 
         async with self._session.get(url, headers=headers, params=params, timeout=timeout, **kwargs) as response:
@@ -131,7 +147,7 @@ class Client:
         Get the monthly usage status of DeepL API account.
         :return: Dictionary containing the usage data.
         """
-        return await self.__request_deepl_api(self.ApiUrls.usage)
+        return await self.__request_deepl_api(self.ApiPath.usage)
 
     async def translate(self, text: str, target_language: str, source_language: Optional[str] = None) -> List[str]:
         """
@@ -157,7 +173,7 @@ class Client:
         if source_language:
             # Get language, then split possible EN-US, EN-GB languages to only EN (only this is supported as source)
             params["source_lang"] = self.get_language(source_language, ignore_case=True).language_code.split("-")[0]
-        response = await self.__request_deepl_api(self.ApiUrls.translate, params=params)
+        response = await self.__request_deepl_api(self.ApiPath.translate, params=params)
         print(response)
         serialized_translations = response["translations"]
         translations = []
