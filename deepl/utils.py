@@ -29,6 +29,7 @@ import logging
 def replace_aliases(representation: str, ignore_case: bool = False) -> str:
     """
     Replace aliases in a language representation string.
+
     :param representation: A string representing a supported language.
     :param ignore_case: Ignore case for the alias comparison.
     :return: Language string representation with aliases converted to supported syntax. Returns the original

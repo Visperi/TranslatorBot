@@ -45,6 +45,7 @@ class Translation:
         """
         Finalize a translation to a complete object containing also source and target languages. Should be called only
         internally.
+
         :param source_language: Source language of the translation.
         :param target_language: Target language of the translation.
         :exception ValueError: Either source language or target language has a falsy value.

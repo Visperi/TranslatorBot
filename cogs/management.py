@@ -42,6 +42,7 @@ class ManagementCog(commands.Cog, name="Management",
     async def manage_extensions(self, ctx: commands.Context) -> None:
         """
         Load, reload or unload an extension.
+
         :param ctx:
         """
         if ctx.invoked_subcommand is None:
@@ -51,6 +52,7 @@ class ManagementCog(commands.Cog, name="Management",
     async def load_cog(self, ctx: commands.Context, extension_name: str) -> None:
         """
         Load an extension atomically.
+
         :param ctx:
         :param extension_name: Extension name to load.
         """
@@ -61,6 +63,7 @@ class ManagementCog(commands.Cog, name="Management",
     async def unload_cog(self, ctx: commands.Context, extension_name: str) -> None:
         """
         Unload an extension atomically.
+
         :param ctx:
         :param extension_name: Extension name to unload.
         """
@@ -71,6 +74,7 @@ class ManagementCog(commands.Cog, name="Management",
     async def reload_cog(self, ctx: commands.Context, extension_name: str) -> None:
         """
         Reload an extension atomically.
+
         :param ctx:
         :param extension_name: Extension name to reload.
         """
@@ -81,6 +85,7 @@ class ManagementCog(commands.Cog, name="Management",
     async def get_deepl_translation_limits(self, ctx: commands.Context) -> None:
         """
         Get DeepL API usage status for the bot.
+
         :param ctx:
         """
         response = await self.bot.deepl_client.get_usage()
@@ -95,6 +100,7 @@ class ManagementCog(commands.Cog, name="Management",
     async def sync_commands(self, ctx: commands.Context, guild_id: int = None) -> None:
         """
         Synchronize slash commands to Discord API for the bot. Bot owner command.
+
         :param ctx:
         :param guild_id: Guild ID to sync the commands for. If not provided, sync for all guilds.
         """
@@ -105,6 +111,7 @@ class ManagementCog(commands.Cog, name="Management",
     async def update_supported_languages(self, ctx: commands.Context) -> None:
         """
         Update supported languages.
+
         :param ctx:
         """
         current_languages = self.bot.deepl_client.supported_languages

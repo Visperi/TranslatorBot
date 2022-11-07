@@ -43,6 +43,7 @@ class EventListenerCog(commands.Cog):
     async def __translate_from_reply(self, message: discord.Message) -> None:
         """
         Translate a message from a replied message. Is triggered only when the bot is mentioned.
+
         :param message: Message which triggered this event.
         """
         split = message.content.split()

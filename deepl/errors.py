@@ -24,20 +24,20 @@ SOFTWARE.
 
 
 class DeepLError(Exception):
-    """Base exception for DeepL API related exceptions"""
+    """Base exception for DeepL API related exceptions."""
     pass
 
 
 class DeepLQuotaExceededError(DeepLError):
-    """Exception raised when DeepL API quota is exceeded"""
+    """Exception raised when DeepL API quota is exceeded."""
     pass
 
 
 class TooManyRequestsError(DeepLError):
-    """Exception raised when too many or too frequent requests are sent to DeepL API"""
+    """Exception raised when too many or too frequent requests are sent to DeepL API."""
     pass
 
 
 class LanguageNotSupportedError(DeepLError):
-    """Exception raised when a language is not supported in DeepL API"""
+    """Exception raised when a language is not supported in DeepL API."""
     pass

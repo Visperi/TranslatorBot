@@ -28,7 +28,7 @@ from typing import Union, Iterable
 import json
 import deepl
 
-BOT_VERSION = "0.91"
+BOT_VERSION = "0.92"
 COMMAND_PREFIX: Union[str, Iterable[str]] = "?"
 
 

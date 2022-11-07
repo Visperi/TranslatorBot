@@ -78,10 +78,15 @@ class TranslationCog(commands.Cog, name="Translations",
     @commands.hybrid_command(name="stranslate", aliases=["source_translate", "st"],
                              description="Translate text from source language to target language. "
                                          "Both source and target language are needed.")
-    async def source_translate(self, ctx: commands.Context, source_language: str, target_language: str, *, text: str) \
-            -> None:
+    async def source_translate(self,
+                               ctx: commands.Context,
+                               source_language: str,
+                               target_language: str,
+                               *,
+                               text: str) -> None:
         """
         Translate text from source language to target language. Both source and target languages are required.
+
         :param ctx:
         :param source_language: Source language for the original text.
         :param target_language: Target language for the translated text.

@@ -70,6 +70,7 @@ class Client:
     def get_language(self, representation: str, ignore_case: bool = False) -> Optional[Language]:
         """
         Convert a string representing language to an actual Language object.
+
         :param representation: String representing a language.
         :param ignore_case: Ignore case for the search of an actual Language object.
         :return: Language object if found from supported languages, None otherwise.
@@ -96,6 +97,7 @@ class Client:
     def is_supported_language(self, search: str, ignore_case: bool = False) -> bool:
         """
         Check if language is supported. If the language is also needed, get_language may be better method.
+
         :param search: Language to check for supported status.
         :param ignore_case: Ignore case for the check.
         :return: True if the language is supported, False otherwise.
@@ -108,6 +110,7 @@ class Client:
     async def update_supported_languages(self) -> List[Language]:
         """
         Update supported languages in the DeepL API.
+
         :return: List of supported languages as Language objects.
         """
         languages = []
@@ -123,6 +126,7 @@ class Client:
                                   timeout: int = 5, **kwargs) -> dict:
         """
         Fetch data from DeepL API.
+
         :param path: DeepL API url to fetch data from.
         :param params: Params needed for the API request.
         :param timeout: Timeout for the request in seconds.
@@ -161,6 +165,7 @@ class Client:
     async def get_usage(self) -> dict:
         """
         Get the monthly usage status of DeepL API account.
+
         :return: Dictionary containing the usage data.
         """
         return await self.__request_deepl_api(self.ApiPath.usage)
@@ -172,6 +177,7 @@ class Client:
             source_language: Optional[str] = None) -> List[Translation]:
         """
         Translate text from source language to target language.
+
         :param text: Text to translate or list of texts to translate. Up to 50 translations is supported at once.
         :param target_language: Target language to translate the text to.
         :param source_language: Source language for the original text. If omitted, the source language is detected
