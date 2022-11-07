@@ -23,8 +23,9 @@ SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import List, Optional
+from typing import List, Optional, Union, Tuple
 from .language import Language
+from .translation import Translation
 from .errors import *
 from . import utils
 import aiohttp
@@ -116,7 +117,10 @@ class Client:
         self._supported_languages = languages
         return languages
 
-    async def __request_deepl_api(self, path: str, params: dict = None, timeout: int = 5, **kwargs) -> dict:
+    async def __request_deepl_api(self,
+                                  path: str,
+                                  params: Union[dict, List[Tuple[str, str]]] = None,
+                                  timeout: int = 5, **kwargs) -> dict:
         """
         Fetch data from DeepL API.
         :param path: DeepL API url to fetch data from.
@@ -135,16 +139,24 @@ class Client:
         headers = {"Authorization": f"DeepL-Auth-Key {self._api_token}", "User-Agent": self._user_agent}
 
         async with self._session.get(url, headers=headers, params=params, timeout=timeout, **kwargs) as response:
-            # TODO: Attempt to fetch the message field here
+
             if response.status == 429:
                 raise TooManyRequestsError("Too many DeepL API requests. Consider adding some delay between frequent "
                                            "requests.")
             elif response.status == 456:
                 raise DeepLQuotaExceededError("DeepL API quota exceeded. This can be resolved by upgrading DeepL "
                                               "subscription.")
-            response.raise_for_status()
 
-            return await response.json(encoding="utf-8")
+            response_content = await response.json(encoding="utf-8")
+            try:
+                response.raise_for_status()
+
+            except aiohttp.ClientResponseError:
+                msg = response_content.get("message")
+                _logger.exception(f"Error {response.status}: {msg}")
+
+            else:
+                return await response.json(encoding="utf-8")
 
     async def get_usage(self) -> dict:
         """
@@ -153,10 +165,14 @@ class Client:
         """
         return await self.__request_deepl_api(self.ApiPath.usage)
 
-    async def translate(self, text: str, target_language: str, source_language: Optional[str] = None) -> List[str]:
+    async def translate(
+            self,
+            text: Union[str, List[str]],
+            target_language: str,
+            source_language: Optional[str] = None) -> List[Translation]:
         """
         Translate text from source language to target language.
-        :param text: Text to translate.
+        :param text: Text to translate or list of texts to translate. Up to 50 translations is supported at once.
         :param target_language: Target language to translate the text to.
         :param source_language: Source language for the original text. If omitted, the source language is detected
         automatically.
@@ -166,6 +182,8 @@ class Client:
         """
         if not text:
             raise ValueError("Translated text must be provided.")
+        if isinstance(text, list) and len(text) > 50:
+            raise ValueError("Only up to 50 translations are supported at once.")
 
         target_lang = self.get_language(target_language, ignore_case=True)
         if not target_lang:
@@ -173,19 +191,22 @@ class Client:
         if source_language and not self.get_language(source_language, ignore_case=True):
             raise LanguageNotSupportedError(f"Target source language `{source_language}` is not supported.")
 
-        params = dict(text=text, target_lang=target_lang.language_code)
+        if isinstance(text, str):
+            params = [("text", text)]
+        else:
+            params = [("text", untranslated) for untranslated in text]
+
+        params.append(("target_lang", target_lang.language_code))
 
         if source_language:
             # Get language, then split possible EN-US, EN-GB languages to only EN (only this is supported as source)
-            params["source_lang"] = self.get_language(source_language, ignore_case=True).language_code.split("-")[0]
+            source_lang = self.get_language(source_language, ignore_case=True).language_code.split("-")[0]
+            params.append(("source_lang", source_lang))
 
         response = await self.__request_deepl_api(self.ApiPath.translate, params=params)
-        serialized_translations = response["translations"]
+        translations = [Translation(payload) for payload in response["translations"]]
 
-        translations = []
-        for translation in serialized_translations:
-            detected_source_language = self.get_language(translation["detected_source_language"])
-            translations.append(f"`{detected_source_language.language_code} -> {target_lang.language_code}`: "
-                                f"{translation['text']}")
+        for translation in translations:
+            translation.finalize(self.get_language(translation.detected_source_language), target_lang)
 
         return translations
