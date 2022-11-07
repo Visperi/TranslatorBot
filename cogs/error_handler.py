@@ -22,12 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import sys
-import traceback
-import datetime
+
+import logging
 from discord.ext import commands
 from typing import List, Any, Union
 from deepl.errors import *
+
+
+_logger = logging.getLogger(__name__)
 
 
 class ErrorHandlerCog(commands.Cog):
@@ -53,19 +55,13 @@ class ErrorHandlerCog(commands.Cog):
 
         return ret
 
-    @staticmethod
-    def __log_unexpected_error(error: Exception):
-        ts = datetime.datetime.now().replace(microsecond=0)
-        print(f"[{ts}] Ignoring unexpected exception:", file=sys.stderr)
-        traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
-
     @commands.Cog.listener()
     async def on_command_error(self, ctx: commands.Context, error: commands.CommandInvokeError) -> None:
         try:
             original = error.original
         except AttributeError:
             # Some really unexpected error happened
-            self.__log_unexpected_error(error)
+            _logger.exception("Ignoring unexpected exception:")
             return
 
         if isinstance(original, commands.CommandNotFound) or isinstance(original, commands.MissingRequiredArgument):
@@ -105,7 +101,8 @@ class ErrorHandlerCog(commands.Cog):
                            f"extension name was given.")
 
         elif isinstance(original, commands.ExtensionNotLoaded):
-            await ctx.send(f"Extension `{original.name}` is not loaded. Please ensure the full extension name was given.")
+            await ctx.send(f"Extension `{original.name}` is not loaded. "
+                           f"Please ensure the full extension name was given.")
 
         # DeepL related errors. Rest of the expected exceptions should fall into this category
         elif isinstance(original, DeepLError):
@@ -113,8 +110,7 @@ class ErrorHandlerCog(commands.Cog):
 
         # Unexpected exceptions fall here
         else:
-            self.__log_unexpected_error(original)
-            print()
+            _logger.error("Ignoring unexpected exception:", exc_info=original)
             await ctx.send(f"Unexpected error: `{type(original).__name__}`. Contact the bot owner to resolve "
                            f"this issue.")
 
