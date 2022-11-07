@@ -33,9 +33,9 @@ import aiohttp
 class Client:
 
     class ApiPath:
-        translate = f"/translate"
-        usage = f"/usage"
-        languages = f"/languages?type=target"
+        translate = "/translate"
+        usage = "/usage"
+        languages = "/languages?type=target"
 
     def __init__(
             self,
