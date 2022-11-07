@@ -52,7 +52,7 @@ class Client:
         else:
             self._version = "pro"
 
-        utils.log(f"Logging in using {self._version} version DeepL token.")
+        print(f"Logging in using {self._version} version of DeepL token.")
 
     @property
     def supported_languages(self) -> List[Language]:
