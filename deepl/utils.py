@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-# TODO: Add global logging function here?
 from typing import Dict, List
+import logging
 
 
 def replace_aliases(representation: str, ignore_case: bool = False) -> str:
@@ -50,3 +50,57 @@ def replace_aliases(representation: str, ignore_case: bool = False) -> str:
             return language_code
 
     return representation
+
+
+class _CustomFormatter(logging.Formatter):
+
+    grey = "\x1b[38;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
+    bold_red = "\x1b[31;1m"
+    reset = "\x1b[0m"
+    output_format = "[{asctime}] [{levelname:<8}] {name}: {message}"
+
+    LEVEL_COLOURS = [
+        (logging.DEBUG, grey),
+        (logging.INFO, grey),
+        (logging.WARNING, yellow),
+        (logging.ERROR, red),
+        (logging.CRITICAL, bold_red)
+    ]
+
+    FORMATTERS = {}
+    for level, colour in LEVEL_COLOURS:
+        FORMATTERS[level] = logging.Formatter(fmt=colour+output_format+reset, datefmt="%Y-%m-%d %H:%M:%S", style="{")
+
+    def format(self, record) -> str:
+        formatter = self.FORMATTERS.get(record.levelno, self.FORMATTERS[logging.DEBUG])
+
+        if record.exc_info:
+            formatted = formatter.formatException(record.exc_info)
+            record.exc_text = self.red + formatted + self.reset
+
+        output = formatter.format(record)
+        record.exc_text = None
+        return output
+
+
+def configure_logging(
+        level: int = logging.INFO,
+        formatter: logging.Formatter = None,
+        handler: logging.Handler = None,
+        use_colours: bool = True):
+
+    if not handler:
+        handler = logging.StreamHandler()
+
+    if not formatter and use_colours:
+        formatter = _CustomFormatter()
+    else:
+        formatter = logging.Formatter(fmt="[{asctime}] [{levelname:<8}] {name}: {message}", datefmt="%Y-%m-%d %H:%M:%S",
+                                      style="{")
+
+    handler.setFormatter(formatter)
+    logger = logging.getLogger()
+    logger.setLevel(level)
+    logger.addHandler(handler)
