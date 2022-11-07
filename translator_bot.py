@@ -29,7 +29,7 @@ import traceback
 import os
 from discord.ext import commands
 from typing import Union, Iterable, Optional
-from deepl import deepl
+import deepl
 
 
 class CommandPrefixParser:
