@@ -22,14 +22,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import datetime
-import discord
-import aiohttp
-import traceback
-import os
+
 from discord.ext import commands
 from typing import Union, Iterable, Optional
 import deepl
+import logging
+import discord
+import aiohttp
+import os
+
+
+_logger = logging.getLogger(__name__)
 
 
 class CommandPrefixParser:
@@ -58,8 +61,7 @@ class TranslatorBot(commands.Bot):
         self._aiohttp_session = aiohttp.ClientSession(loop=self.loop, raise_for_status=True)
         self._deepl_client = deepl.Client(self._deepl_api_token, str(self.user), self.aiohttp_session)
         supported_languages = await self.deepl_client.update_supported_languages()
-        ts = datetime.datetime.now().replace(microsecond=0)
-        print(f"[{ts}] Loaded {len(supported_languages)} supported languages.")
+        _logger.info(f"Loaded {len(supported_languages)} supported languages.")
 
     @property
     def aiohttp_session(self):
@@ -77,8 +79,7 @@ class TranslatorBot(commands.Bot):
             try:
                 await self.load_extension(extension)
             except:
-                print(f"Failed to load extension {extension}")
-                traceback.print_exc()
+                _logger.exception(f"Failed to load extension {extension}")
 
     async def fetch_url(self, url: str, timeout: int = 10, **kwargs) -> str:
         if not url:

@@ -22,11 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import json
+
 from translator_bot import TranslatorBot
 from typing import Union, Iterable
+import json
+import deepl
 
-BOT_VERSION = "0.9"
+BOT_VERSION = "0.91"
 COMMAND_PREFIX: Union[str, Iterable[str]] = "?"
 
 
@@ -38,7 +40,8 @@ def start():
     deepl_api_token = credentials["api_tokens"]["deepl"]
     bot = TranslatorBot(deepl_api_token, COMMAND_PREFIX)
 
-    bot.run(discord_api_token, reconnect=True)
+    deepl.utils.configure_logging()
+    bot.run(discord_api_token, reconnect=True, log_handler=None)
 
 
 if __name__ == '__main__':

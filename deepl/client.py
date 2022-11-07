@@ -28,6 +28,9 @@ from .language import Language
 from .errors import *
 from . import utils
 import aiohttp
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class Client:
@@ -42,6 +45,7 @@ class Client:
             api_token: str, user_agent: str,
             aiohttp_session: aiohttp.ClientSession
     ) -> None:
+        # utils.configure_logging()
         self._user_agent = user_agent
         self._session = aiohttp_session
         self._supported_languages: List[Language] = []
@@ -52,7 +56,7 @@ class Client:
         else:
             self._version = "pro"
 
-        print(f"Logging in using {self._version} version of DeepL token.")
+        _logger.info(f"Logging in using {self._version} version of DeepL token.")
 
     @property
     def supported_languages(self) -> List[Language]:
@@ -170,12 +174,14 @@ class Client:
             raise LanguageNotSupportedError(f"Target source language `{source_language}` is not supported.")
 
         params = dict(text=text, target_lang=target_lang.language_code)
+
         if source_language:
             # Get language, then split possible EN-US, EN-GB languages to only EN (only this is supported as source)
             params["source_lang"] = self.get_language(source_language, ignore_case=True).language_code.split("-")[0]
+
         response = await self.__request_deepl_api(self.ApiPath.translate, params=params)
-        print(response)
         serialized_translations = response["translations"]
+
         translations = []
         for translation in serialized_translations:
             detected_source_language = self.get_language(translation["detected_source_language"])
