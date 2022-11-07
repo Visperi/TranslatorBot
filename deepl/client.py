@@ -174,7 +174,9 @@ class Client:
             self,
             text: Union[str, List[str]],
             target_language: str,
-            source_language: Optional[str] = None) -> List[Translation]:
+            source_language: Optional[str] = None,
+            ignore_case: bool = True
+    ) -> List[Translation]:
         """
         Translate text from source language to target language.
 
@@ -182,7 +184,8 @@ class Client:
         :param target_language: Target language to translate the text to.
         :param source_language: Source language for the original text. If omitted, the source language is detected
         automatically.
-        :return: List of translated texts.
+        :param ignore_case: Ignore case for detecting target and source languages and their aliases.
+        :return: List of translations.
         :exception ValueError: Text to translate has falsy value.
         :exception LanguageNotSupportedError: Target language or source language is not supported.
         """
@@ -191,11 +194,11 @@ class Client:
         if isinstance(text, list) and len(text) > 50:
             raise ValueError("Only up to 50 translations are supported at once.")
 
-        target_lang = self.get_language(target_language, ignore_case=True)
+        target_lang = self.get_language(target_language, ignore_case=ignore_case)
         if not target_lang:
             raise LanguageNotSupportedError(f"Target language `{target_language}` is not supported.")
-        if source_language and not self.get_language(source_language, ignore_case=True):
-            raise LanguageNotSupportedError(f"Target source language `{source_language}` is not supported.")
+        if source_language and not self.get_language(source_language, ignore_case=ignore_case):
+            raise LanguageNotSupportedError(f"Source language `{source_language}` is not supported.")
 
         if isinstance(text, str):
             params = [("text", text)]
@@ -206,7 +209,7 @@ class Client:
 
         if source_language:
             # Get language, then split possible EN-US, EN-GB languages to only EN (only this is supported as source)
-            source_lang = self.get_language(source_language, ignore_case=True).language_code.split("-")[0]
+            source_lang = utils.strip_source_language_exceptions(source_language, ignore_case=ignore_case)
             params.append(("source_lang", source_lang))
 
         response = await self.__request_deepl_api(self.ApiPath.translate, params=params)
