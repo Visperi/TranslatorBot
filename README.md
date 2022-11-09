@@ -8,7 +8,7 @@ For package requirements see the `requirements.txt`
 
 ## Running the bot
 
-Currently, this bot is not in public usage. To run the bot, all you need is:
+Currently, this bot has no instance running in public usage. To run the bot yourself in any server, all you need is:
 
 - Discord bot application and its API token: [Discord application docs](https://discordapp.com/developers/applications)
 - DeepL account and token to their REST API: [DeepL API docs](https://www.deepl.com/pro-api?cta=header-pro-api/)
