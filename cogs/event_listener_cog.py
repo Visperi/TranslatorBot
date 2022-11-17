@@ -47,12 +47,18 @@ class EventListenerCog(commands.Cog):
         :param message: Message which triggered this event.
         """
         split = message.content.split()
-        if len(split) > 2:
-            await message.channel.send("Please send only the possible non-English target language after mentioning me.")
+        if len(split) > 3:
+            await message.channel.send("Please send only the source language and target language, or only the "
+                                       "non-english target language, after mentioning me.")
             return
-        try:
+
+        source_language = None
+        if len(split) == 3:
+            source_language = split[1]
+            target_language = split[2]
+        elif len(split) == 2:
             target_language = split[1]
-        except IndexError:
+        else:
             target_language = "EN-US"
 
         untranslated_text = message.reference.resolved.content
@@ -61,8 +67,10 @@ class EventListenerCog(commands.Cog):
             return
 
         try:
-            translated = await self.bot.deepl_client.translate(untranslated_text, target_language)
-            await message.reply("\n".join(translated), mention_author=False)
+            translations = await self.bot.deepl_client.translate(untranslated_text, target_language,
+                                                                 source_language=source_language)
+            texts = [translation.text for translation in translations]
+            await message.reply("\n".join(texts), mention_author=False)
         except DeepLError as e:
             await message.channel.send(str(e))
         except Exception as e:
