@@ -208,8 +208,8 @@ class Client:
         params.append(("target_lang", target_lang.language_code))
 
         if source_language:
-            # Get language, then split possible EN-US, EN-GB languages to only EN (only this is supported as source)
             source_lang = utils.strip_source_language_exceptions(source_language, ignore_case=ignore_case)
+            source_lang = self.get_language(source_lang, ignore_case=ignore_case).language_code
             params.append(("source_lang", source_lang))
 
         response = await self.__request_deepl_api(self.ApiPath.translate, params=params)
