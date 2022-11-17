@@ -60,7 +60,7 @@ will be English.
 
 - Support dynamic command prefix between Discord guilds
 - Support DeepL glossary feature
-- Support also source language in the quick translation
+- Support also Language object in `deepl.client.__translate`
 
 ## Supported languages
 
