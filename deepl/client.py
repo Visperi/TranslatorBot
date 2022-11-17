@@ -186,9 +186,12 @@ class Client:
         automatically.
         :param ignore_case: Ignore case for detecting target and source languages and their aliases.
         :return: List of translations.
-        :exception ValueError: Text to translate has falsy value.
+        :exception ValueError: Text to translate or target language has falsy value, or more than 50 texts to translate
+        was provided.
         :exception LanguageNotSupportedError: Target language or source language is not supported.
         """
+        if not target_language:
+            raise ValueError("Target language is mandatory for translation.")
         if not text:
             raise ValueError("Translated text must be provided.")
         if isinstance(text, list) and len(text) > 50:
