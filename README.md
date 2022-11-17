@@ -55,7 +55,8 @@ Bot owner has the following features:
 The bot also supports so-called quick translation by mentioning the bot on a reply to desired message. 
 The original message will then be translated.
 
-The quick translation has no mandatory arguments. If omitted, the target language is English.
+There are no mandatory arguments for quick translation. If omitted, the target language is English and source language 
+is detected automatically.
 
 ![Quick translation without arguments](images/quick_translation_no_args.PNG)
 
