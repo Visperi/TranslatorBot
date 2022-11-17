@@ -50,11 +50,22 @@ Bot owner has the following features:
 - Check current usage status of the bot
 - Load, unload or reload an extension atomically
 
-Additionally, there is a quick translation available by replying with bot mention to the translated message.
-The source language is detected automatically, and the target language is optional. If omitted, the target language
-will be English.
+### Quick translation
 
-![Example of quick translation](images/quick_translation.PNG)
+The bot also supports so-called quick translation by mentioning the bot on a reply to desired message. 
+The original message will then be translated.
+
+The quick translation has no mandatory arguments. If omitted, the target language is English.
+
+![Quick translation without arguments](images/quick_translation_no_args.PNG)
+
+The target language can also be given explicitly. The target language will be detected automatically.
+
+![Quick translation with target argument](images/quick_translation_target_arg.PNG)
+
+Both source language and target language can also be given for more special cases, if e.g. the language detection fails.
+
+![Quick translation with both args](images/quick_translation_both_args.PNG)
 
 ## TODO features
 
