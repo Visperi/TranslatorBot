@@ -67,7 +67,7 @@ class Client:
     def version(self) -> str:
         return self._version
 
-    def get_language(self, representation: str, ignore_case: bool = False) -> Optional[Language]:
+    def get_language(self, representation: Union[str, Language], ignore_case: bool = False) -> Optional[Language]:
         """
         Convert a string representing language to an actual Language object.
 
@@ -78,6 +78,8 @@ class Client:
         """
         if not representation:
             raise ValueError("Target language must be provided.")
+        if isinstance(representation, Language):
+            return representation
 
         representation = utils.replace_aliases(representation, ignore_case=ignore_case)
 
@@ -173,17 +175,17 @@ class Client:
     async def translate(
             self,
             text: Union[str, List[str]],
-            target_language: str,
-            source_language: Optional[str] = None,
+            target_language: Union[str, Language],
+            source_language: Optional[Union[str, Language]] = None,
             ignore_case: bool = True
     ) -> List[Translation]:
         """
         Translate text from source language to target language.
 
         :param text: Text to translate or list of texts to translate. Up to 50 translations is supported at once.
-        :param target_language: Target language to translate the text to.
-        :param source_language: Source language for the original text. If omitted, the source language is detected
-        automatically.
+        :param target_language: A string representing the target language, or a Language object.
+        :param source_language: A string representing the source language, or a Language object. If omitted,
+        the source language is detected automatically.
         :param ignore_case: Ignore case for detecting target and source languages and their aliases.
         :return: List of translations.
         :exception ValueError: Text to translate or target language has falsy value, or more than 50 texts to translate
@@ -197,10 +199,15 @@ class Client:
         if isinstance(text, list) and len(text) > 50:
             raise ValueError("Only up to 50 translations are supported at once.")
 
-        target_lang = self.get_language(target_language, ignore_case=ignore_case)
-        if not target_lang:
+        target_lang_obj = self.get_language(target_language, ignore_case=ignore_case)
+        source_lang_obj = None
+        if source_language:
+            source_lang_obj = utils.strip_source_language_exceptions(source_language, ignore_case=ignore_case)
+            source_lang_obj = self.get_language(source_lang_obj, ignore_case=ignore_case)
+
+        if not target_lang_obj:
             raise LanguageNotSupportedError(f"Target language `{target_language}` is not supported.")
-        if source_language and not self.get_language(source_language, ignore_case=ignore_case):
+        if source_language and not source_lang_obj:
             raise LanguageNotSupportedError(f"Source language `{source_language}` is not supported.")
 
         if isinstance(text, str):
@@ -208,17 +215,15 @@ class Client:
         else:
             params = [("text", untranslated) for untranslated in text]
 
-        params.append(("target_lang", target_lang.language_code))
+        params.append(("target_lang", target_lang_obj.language_code))
 
-        if source_language:
-            source_lang = utils.strip_source_language_exceptions(source_language, ignore_case=ignore_case)
-            source_lang = self.get_language(source_lang, ignore_case=ignore_case).language_code
-            params.append(("source_lang", source_lang))
+        if source_lang_obj:
+            params.append(("source_lang", source_lang_obj.language_code))
 
         response = await self.__request_deepl_api(self.ApiPath.translate, params=params)
         translations = [Translation(payload) for payload in response["translations"]]
 
         for translation in translations:
-            translation.finalize(self.get_language(translation.detected_source_language), target_lang)
+            translation.finalize(self.get_language(translation.detected_source_language), target_lang_obj)
 
         return translations
