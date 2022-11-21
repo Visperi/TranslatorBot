@@ -86,10 +86,11 @@ def strip_source_language_exceptions(representation: str, ignore_case: bool = Fa
 
     return representation
 
-# TODO: Add docstrings to below functions
-
 
 class _CustomFormatter(logging.Formatter):
+    """
+    A default log formatter with colours.
+    """
 
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
@@ -126,7 +127,17 @@ def configure_logging(
         level: int = logging.INFO,
         formatter: logging.Formatter = None,
         handler: logging.Handler = None,
-        use_colours: bool = True):
+        use_colours: bool = True) -> None:
+    """
+    Configure logging for the logging system.
+
+    :param level: The smallest logging level to log.
+    :param formatter: Formatter for the log messages. If omitted, a default one is set up with or without colours
+    depending on parameter use_colours.
+    :param handler: Handler for the logger. If omitted, StreamHandler is used with default parameters.
+    :param use_colours: Choose if colour should be used for the logging. Has no effect if formatter is explicitly
+    given to this function.
+    """
 
     if not handler:
         handler = logging.StreamHandler()
