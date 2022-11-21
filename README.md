@@ -72,7 +72,6 @@ Both source language and target language can also be given for more special case
 
 - Support dynamic command prefix between Discord guilds
 - Support DeepL glossary feature
-- Support also Language object in `deepl.client.__translate`
 
 ## Supported languages
 
