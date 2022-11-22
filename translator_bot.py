@@ -86,7 +86,3 @@ class TranslatorBot(commands.Bot):
             raise ValueError("Url must be provided.")
         async with self.aiohttp_session.get(url, timeout=timeout, **kwargs) as response:
             return await response.text()
-
-    async def on_message(self, message: discord.Message, /) -> None:
-        # Prevent this event firing twice by doing nothing here. The actual logic is in event listener cog
-        return
